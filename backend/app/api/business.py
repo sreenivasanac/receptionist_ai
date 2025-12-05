@@ -9,6 +9,7 @@ import yaml
 
 from app.db.database import get_db_connection
 from app.models.business import Business, BusinessCreate, BusinessUpdate, BusinessConfig
+from app.api.chat import invalidate_agent_cache
 
 router = APIRouter(prefix="/business", tags=["Business"])
 
@@ -84,6 +85,10 @@ async def update_business(business_id: str, update: BusinessUpdate):
                 values
             )
             conn.commit()
+            
+            # If config_yaml was updated, invalidate agent cache
+            if update.config_yaml is not None:
+                invalidate_agent_cache(business_id)
         
         return await get_business(business_id)
 
@@ -132,6 +137,9 @@ async def update_business_config(business_id: str, config: dict):
         """, (config_yaml, datetime.now().isoformat(), business_id))
         conn.commit()
         
+        # Invalidate agent cache so chatbot picks up the new config
+        invalidate_agent_cache(business_id)
+        
         return {"message": "Configuration updated", "config": config}
 
 
@@ -156,6 +164,9 @@ async def update_business_config_yaml(business_id: str, yaml_content: str):
             WHERE id = ?
         """, (yaml_content, datetime.now().isoformat(), business_id))
         conn.commit()
+        
+        # Invalidate agent cache so chatbot picks up the new config
+        invalidate_agent_cache(business_id)
         
         return {"message": "Configuration updated"}
 

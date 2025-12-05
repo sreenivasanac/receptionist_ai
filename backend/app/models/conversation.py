@@ -1,6 +1,6 @@
 """Conversation and chat models."""
 from datetime import datetime
-from typing import Optional, Literal
+from typing import Optional, Literal, Any
 from pydantic import BaseModel, Field
 
 
@@ -19,6 +19,24 @@ class CustomerInfo(BaseModel):
     phone: Optional[str] = None
 
 
+class ServiceOption(BaseModel):
+    """Service option for selection."""
+    id: str
+    name: str
+    price: float
+    duration_minutes: Optional[int] = None
+    description: Optional[str] = None
+
+
+class InputConfig(BaseModel):
+    """Configuration for structured input components."""
+    services: Optional[list[ServiceOption]] = None
+    multi_select: bool = False
+    fields: Optional[list[str]] = None
+    min_date: Optional[str] = None
+    time_slots: Optional[list[str]] = None
+
+
 class ChatRequest(BaseModel):
     """Chat request from widget."""
     business_id: str
@@ -31,6 +49,8 @@ class ChatResponse(BaseModel):
     """Chat response to widget."""
     session_id: str
     message: str
+    input_type: str = "text"  # text, service_select, datetime_picker, contact_form
+    input_config: Optional[InputConfig] = None
     customer_info_needed: list[str] = Field(default_factory=list)
     actions: list[dict] = Field(default_factory=list)
 

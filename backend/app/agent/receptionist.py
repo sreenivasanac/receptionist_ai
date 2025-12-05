@@ -4,8 +4,12 @@ import yaml
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.db.sqlite import SqliteDb
 
 from app.config import settings
+
+# Shared database for Agno session persistence
+agno_db = SqliteDb(db_file=str(settings.DATABASE_PATH.parent / "agno_sessions.db"))
 from app.agent.prompts import get_system_prompt
 from app.tools.business_info import (
     get_business_hours, 
@@ -24,6 +28,8 @@ class ReceptionistToolkit:
         self.config = business_config
         self.customer_info = {}
         self.collecting_field = None
+        self.pending_input_type = None  # Track what structured input to show
+        self.pending_input_config = None
     
     def get_hours(self, day: Optional[str] = None) -> str:
         """Get business hours. Optionally specify a day (e.g., 'monday', 'saturday')."""
@@ -42,6 +48,11 @@ class ReceptionistToolkit:
             else:
                 hours_list.append(f"{d.title()}: {h['open']} - {h['close']}")
         return "Our hours are:\n" + "\n".join(hours_list)
+    
+    def get_services_list(self) -> list[dict]:
+        """Get raw list of services for structured display."""
+        services = self.config.get("services", [])
+        return services
     
     def get_services(self, service_name: Optional[str] = None) -> str:
         """Get service information. Optionally search by service name."""
@@ -121,9 +132,16 @@ class ReceptionistToolkit:
         )
         
         if result["all_collected"]:
+            self.pending_input_type = None
+            self.pending_input_config = None
             return f"I have all your information. Thank you, {self.customer_info.get('first_name', 'valued customer')}!"
         
         self.collecting_field = result["missing_fields"][0] if result["missing_fields"] else None
+        
+        # Set up structured contact form input
+        self.pending_input_type = "contact_form"
+        self.pending_input_config = {"fields": result.get("missing_fields", ["name", "phone"])}
+        
         return result.get("prompt", "Could you please provide your contact information?")
     
     def update_customer_info(self, field: str, value: str) -> str:
@@ -194,6 +212,40 @@ def create_receptionist_agent(
         field_list = [f.strip() for f in fields.split(",")]
         return toolkit.request_customer_info(field_list, reason)
     
+    @tool
+    def start_booking_flow_tool() -> str:
+        """
+        Start the appointment booking process. 
+        Call this when a customer wants to book an appointment.
+        Returns available services so customer can choose.
+        """
+        services_text = toolkit.get_services()
+        services_list = toolkit.get_services_list()
+        
+        # Set up structured service selection input
+        toolkit.pending_input_type = "service_select"
+        toolkit.pending_input_config = {
+            "services": services_list,
+            "multi_select": True
+        }
+        
+        return f"Here are our available services:\n\n{services_text}\n\nWhich service would you like to book?"
+    
+    @tool
+    def request_datetime_tool() -> str:
+        """
+        Request preferred date and time for appointment.
+        Call this after customer has selected services.
+        """
+        from datetime import date
+        toolkit.pending_input_type = "datetime_picker"
+        toolkit.pending_input_config = {
+            "min_date": date.today().isoformat(),
+            "time_slots": ["9:00 AM", "10:00 AM", "11:00 AM", "12:00 PM", 
+                          "1:00 PM", "2:00 PM", "3:00 PM", "4:00 PM", "5:00 PM"]
+        }
+        return "When would you like to schedule your appointment? Please select a date and time."
+    
     agent = Agent(
         name=f"{business_name} Receptionist",
         model=model,
@@ -205,8 +257,13 @@ def create_receptionist_agent(
             search_faqs_tool,
             get_location_tool,
             collect_customer_info_tool,
+            start_booking_flow_tool,
+            request_datetime_tool,
         ],
         markdown=True,
+        db=agno_db,
+        add_history_to_context=True,
+        num_history_runs=10,
     )
     
     return agent, toolkit

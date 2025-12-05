@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 import yaml
 
 from app.db.database import get_db_connection
-from app.models.conversation import ChatRequest, ChatResponse, ChatMessage, CustomerInfo
+from app.models.conversation import ChatRequest, ChatResponse, ChatMessage, CustomerInfo, InputConfig, ServiceOption
 from app.agent.receptionist import create_receptionist_agent, load_business_config
 from app.agent.prompts import get_greeting_message
 
@@ -18,9 +18,15 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 agent_cache: dict = {}
 
 
-def get_or_create_agent(business_id: str):
-    """Get cached agent or create a new one."""
+def invalidate_agent_cache(business_id: str):
+    """Remove a business from the agent cache to force reload on next request."""
     if business_id in agent_cache:
+        del agent_cache[business_id]
+
+
+def get_or_create_agent(business_id: str, force_refresh: bool = False):
+    """Get cached agent or create a new one."""
+    if business_id in agent_cache and not force_refresh:
         return agent_cache[business_id]
     
     with get_db_connection() as conn:
@@ -123,12 +129,9 @@ async def send_message(request: ChatRequest):
         "timestamp": datetime.now().isoformat()
     })
     
-    history = []
-    for msg in conversation["messages"][:-1]:
-        history.append({"role": msg["role"], "content": msg["content"]})
-    
     try:
-        response = agent.run(request.message, messages=history if history else None)
+        # Use Agno's native session management - it handles history automatically
+        response = agent.run(request.message, session_id=request.session_id)
         assistant_message = response.content
     except Exception as e:
         assistant_message = "I apologize, but I'm having trouble processing your request right now. Please try again or contact us directly."
@@ -149,9 +152,48 @@ async def send_message(request: ChatRequest):
     if toolkit.collecting_field:
         customer_info_needed.append(toolkit.collecting_field)
     
+    # Build input configuration from toolkit's pending state
+    input_type = toolkit.pending_input_type or "text"
+    input_config = None
+    
+    if toolkit.pending_input_config:
+        config_data = toolkit.pending_input_config
+        
+        if input_type == "service_select" and config_data.get("services"):
+            # Convert services to ServiceOption models
+            services = [
+                ServiceOption(
+                    id=s.get("id", s.get("name", "").lower().replace(" ", "_")),
+                    name=s.get("name", ""),
+                    price=float(s.get("price", 0)),
+                    duration_minutes=s.get("duration_minutes"),
+                    description=s.get("description")
+                )
+                for s in config_data.get("services", [])
+            ]
+            input_config = InputConfig(
+                services=services,
+                multi_select=config_data.get("multi_select", True)
+            )
+        elif input_type == "contact_form":
+            input_config = InputConfig(
+                fields=config_data.get("fields", ["name", "phone"])
+            )
+        elif input_type == "datetime_picker":
+            input_config = InputConfig(
+                min_date=config_data.get("min_date"),
+                time_slots=config_data.get("time_slots")
+            )
+        
+        # Clear the pending input after processing
+        toolkit.pending_input_type = None
+        toolkit.pending_input_config = None
+    
     return ChatResponse(
         session_id=request.session_id,
         message=assistant_message,
+        input_type=input_type,
+        input_config=input_config,
         customer_info_needed=customer_info_needed,
         actions=[]
     )

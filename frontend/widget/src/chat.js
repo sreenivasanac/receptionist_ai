@@ -1,12 +1,13 @@
 /**
  * Keystone AI Receptionist Chat Widget
  * Embeddable chat widget for self-care businesses
+ * With structured input support for services, datetime, and contact forms
  */
 
 (function() {
   'use strict';
 
-  const WIDGET_VERSION = '1.0.0';
+  const WIDGET_VERSION = '1.1.0';
   
   const DEFAULT_API_URL = 'http://localhost:8001';
   
@@ -18,6 +19,8 @@
       this.isOpen = false;
       this.isLoading = false;
       this.messages = [];
+      this.currentInputType = 'text';
+      this.currentInputConfig = null;
       
       this.init();
     }
@@ -127,6 +130,22 @@
 .keystone-chat-header-info { flex: 1; }
 .keystone-chat-header-title { font-weight: 600; font-size: 16px; margin: 0; }
 .keystone-chat-header-status { font-size: 12px; opacity: 0.9; }
+.keystone-chat-header-actions { display: flex; gap: 4px; }
+.keystone-chat-clear {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.keystone-chat-clear:hover { background: rgba(255, 255, 255, 0.25); }
+.keystone-chat-clear svg { width: 16px; height: 16px; fill: white; }
+.keystone-chat-clear:disabled { opacity: 0.5; cursor: not-allowed; }
 .keystone-chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -223,6 +242,165 @@
   border-top: 1px solid var(--keystone-border);
 }
 .keystone-powered-by a { color: var(--keystone-primary); text-decoration: none; }
+
+/* Structured Input Styles */
+.keystone-structured-input {
+  padding: 12px 16px;
+  border-top: 1px solid var(--keystone-border);
+  background: #fafafa;
+}
+.keystone-structured-input h4 {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--keystone-text);
+}
+
+/* Service Select Styles */
+.keystone-service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.keystone-service-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.keystone-service-item:hover {
+  border-color: var(--keystone-primary);
+  background: #f8f7ff;
+}
+.keystone-service-item.selected {
+  border-color: var(--keystone-primary);
+  background: #eef2ff;
+}
+.keystone-service-item input[type="checkbox"] {
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--keystone-primary);
+}
+.keystone-service-info {
+  flex: 1;
+}
+.keystone-service-name {
+  font-weight: 500;
+  color: var(--keystone-text);
+  margin-bottom: 2px;
+}
+.keystone-service-details {
+  font-size: 12px;
+  color: var(--keystone-text-light);
+}
+.keystone-service-price {
+  font-weight: 600;
+  color: var(--keystone-primary);
+  white-space: nowrap;
+}
+
+/* Contact Form Styles */
+.keystone-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.keystone-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.keystone-form-group label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--keystone-text);
+}
+.keystone-form-group input {
+  padding: 10px 12px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+}
+.keystone-form-group input:focus {
+  border-color: var(--keystone-primary);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+/* DateTime Picker Styles */
+.keystone-datetime-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.keystone-date-input {
+  padding: 10px 12px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.keystone-date-input:focus {
+  border-color: var(--keystone-primary);
+}
+.keystone-time-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.keystone-time-slot {
+  padding: 8px 12px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 6px;
+  background: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.keystone-time-slot:hover {
+  border-color: var(--keystone-primary);
+  background: #f8f7ff;
+}
+.keystone-time-slot.selected {
+  border-color: var(--keystone-primary);
+  background: var(--keystone-primary);
+  color: white;
+}
+
+/* Submit Button */
+.keystone-submit-btn {
+  margin-top: 12px;
+  padding: 12px 20px;
+  background: var(--keystone-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+.keystone-submit-btn:hover {
+  background: var(--keystone-primary-hover);
+}
+.keystone-submit-btn:disabled {
+  background: var(--keystone-border);
+  cursor: not-allowed;
+}
+
 @media (max-width: 480px) {
   .keystone-chat-widget { bottom: 10px; right: 10px; }
   .keystone-chat-container { width: calc(100vw - 20px); height: calc(100vh - 100px); bottom: 70px; right: -10px; }
@@ -257,11 +435,20 @@
               <h3 class="keystone-chat-header-title">AI Assistant</h3>
               <span class="keystone-chat-header-status">Online</span>
             </div>
+            <div class="keystone-chat-header-actions">
+              <button class="keystone-chat-clear" id="keystone-clear" title="Start new conversation">
+                <svg viewBox="0 0 24 24">
+                  <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                </svg>
+              </button>
+            </div>
           </div>
           
           <div class="keystone-chat-messages" id="keystone-messages"></div>
           
-          <div class="keystone-chat-input-container">
+          <div id="keystone-structured-input"></div>
+          
+          <div class="keystone-chat-input-container" id="keystone-text-input">
             <textarea 
               class="keystone-chat-input" 
               id="keystone-input" 
@@ -289,13 +476,17 @@
         container: document.getElementById('keystone-container'),
         messages: document.getElementById('keystone-messages'),
         input: document.getElementById('keystone-input'),
-        send: document.getElementById('keystone-send')
+        send: document.getElementById('keystone-send'),
+        clear: document.getElementById('keystone-clear'),
+        textInput: document.getElementById('keystone-text-input'),
+        structuredInput: document.getElementById('keystone-structured-input')
       };
     }
     
     bindEvents() {
       this.elements.toggle.addEventListener('click', () => this.toggleChat());
       this.elements.send.addEventListener('click', () => this.sendMessage());
+      this.elements.clear.addEventListener('click', () => this.clearSession());
       this.elements.input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
@@ -364,12 +555,17 @@
       }
     }
     
-    async sendMessage() {
-      const message = this.elements.input.value.trim();
+    async sendMessage(messageOverride = null) {
+      const message = messageOverride || this.elements.input.value.trim();
       if (!message || this.isLoading) return;
       
-      this.elements.input.value = '';
-      this.elements.input.style.height = 'auto';
+      if (!messageOverride) {
+        this.elements.input.value = '';
+        this.elements.input.style.height = 'auto';
+      }
+      
+      // Hide structured input and show text input
+      this.showTextInput();
       
       this.addMessage('user', message);
       this.showTyping();
@@ -394,6 +590,11 @@
         if (response.ok) {
           const data = await response.json();
           this.addMessage('bot', data.message);
+          
+          // Handle structured input based on response
+          if (data.input_type && data.input_type !== 'text' && data.input_config) {
+            this.showStructuredInput(data.input_type, data.input_config);
+          }
         } else {
           this.addMessage('bot', 'Sorry, I encountered an error. Please try again.');
         }
@@ -406,6 +607,230 @@
       this.isLoading = false;
       this.elements.send.disabled = false;
       this.elements.input.focus();
+    }
+    
+    showTextInput() {
+      this.elements.textInput.style.display = 'flex';
+      this.elements.structuredInput.innerHTML = '';
+      this.elements.structuredInput.style.display = 'none';
+      this.currentInputType = 'text';
+      this.currentInputConfig = null;
+    }
+    
+    showStructuredInput(inputType, inputConfig) {
+      this.currentInputType = inputType;
+      this.currentInputConfig = inputConfig;
+      
+      this.elements.textInput.style.display = 'none';
+      this.elements.structuredInput.style.display = 'block';
+      
+      let html = '<div class="keystone-structured-input">';
+      
+      switch (inputType) {
+        case 'service_select':
+          html += this.renderServiceSelect(inputConfig);
+          break;
+        case 'datetime_picker':
+          html += this.renderDateTimePicker(inputConfig);
+          break;
+        case 'contact_form':
+          html += this.renderContactForm(inputConfig);
+          break;
+        default:
+          this.showTextInput();
+          return;
+      }
+      
+      html += '</div>';
+      this.elements.structuredInput.innerHTML = html;
+      this.bindStructuredInputEvents(inputType);
+      this.scrollToBottom();
+    }
+    
+    renderServiceSelect(config) {
+      const services = config.services || [];
+      const multiSelect = config.multi_select !== false;
+      
+      let html = `<h4>Select ${multiSelect ? 'services' : 'a service'}:</h4>`;
+      html += '<div class="keystone-service-list">';
+      
+      services.forEach((service, index) => {
+        const inputType = multiSelect ? 'checkbox' : 'radio';
+        html += `
+          <label class="keystone-service-item" data-service-id="${service.id}">
+            <input type="${inputType}" name="service" value="${service.id}" data-name="${service.name}">
+            <div class="keystone-service-info">
+              <div class="keystone-service-name">${service.name}</div>
+              <div class="keystone-service-details">
+                ${service.duration_minutes ? service.duration_minutes + ' min' : ''}
+                ${service.description ? ' • ' + service.description : ''}
+              </div>
+            </div>
+            <div class="keystone-service-price">$${service.price}</div>
+          </label>
+        `;
+      });
+      
+      html += '</div>';
+      html += '<button class="keystone-submit-btn" id="keystone-submit-services">Continue</button>';
+      
+      return html;
+    }
+    
+    renderDateTimePicker(config) {
+      const minDate = config.min_date || new Date().toISOString().split('T')[0];
+      const timeSlots = config.time_slots || ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+      
+      let html = '<h4>Select date and time:</h4>';
+      html += '<div class="keystone-datetime-picker">';
+      
+      html += `<input type="date" class="keystone-date-input" id="keystone-date" min="${minDate}" value="${minDate}">`;
+      
+      html += '<div class="keystone-time-slots">';
+      timeSlots.forEach(slot => {
+        html += `<button type="button" class="keystone-time-slot" data-time="${slot}">${slot}</button>`;
+      });
+      html += '</div>';
+      
+      html += '</div>';
+      html += '<button class="keystone-submit-btn" id="keystone-submit-datetime" disabled>Continue</button>';
+      
+      return html;
+    }
+    
+    renderContactForm(config) {
+      const fields = config.fields || ['name', 'phone'];
+      
+      let html = '<h4>Your contact information:</h4>';
+      html += '<div class="keystone-contact-form">';
+      
+      if (fields.includes('name') || fields.includes('first_name')) {
+        html += `
+          <div class="keystone-form-group">
+            <label for="keystone-name">Name</label>
+            <input type="text" id="keystone-name" placeholder="Your name" autocomplete="name">
+          </div>
+        `;
+      }
+      
+      if (fields.includes('phone')) {
+        html += `
+          <div class="keystone-form-group">
+            <label for="keystone-phone">Phone</label>
+            <input type="tel" id="keystone-phone" placeholder="(555) 123-4567" autocomplete="tel">
+          </div>
+        `;
+      }
+      
+      if (fields.includes('email')) {
+        html += `
+          <div class="keystone-form-group">
+            <label for="keystone-email">Email</label>
+            <input type="email" id="keystone-email" placeholder="you@example.com" autocomplete="email">
+          </div>
+        `;
+      }
+      
+      html += '</div>';
+      html += '<button class="keystone-submit-btn" id="keystone-submit-contact">Continue</button>';
+      
+      return html;
+    }
+    
+    bindStructuredInputEvents(inputType) {
+      switch (inputType) {
+        case 'service_select':
+          this.bindServiceSelectEvents();
+          break;
+        case 'datetime_picker':
+          this.bindDateTimePickerEvents();
+          break;
+        case 'contact_form':
+          this.bindContactFormEvents();
+          break;
+      }
+    }
+    
+    bindServiceSelectEvents() {
+      const items = this.elements.structuredInput.querySelectorAll('.keystone-service-item');
+      const submitBtn = this.elements.structuredInput.querySelector('#keystone-submit-services');
+      
+      items.forEach(item => {
+        item.addEventListener('click', (e) => {
+          if (e.target.type !== 'checkbox' && e.target.type !== 'radio') {
+            const input = item.querySelector('input');
+            input.checked = !input.checked;
+          }
+          item.classList.toggle('selected', item.querySelector('input').checked);
+        });
+      });
+      
+      submitBtn.addEventListener('click', () => {
+        const selected = [];
+        this.elements.structuredInput.querySelectorAll('input:checked').forEach(input => {
+          selected.push(input.dataset.name);
+        });
+        
+        if (selected.length > 0) {
+          const message = `I'd like to book: ${selected.join(', ')}`;
+          this.sendMessage(message);
+        }
+      });
+    }
+    
+    bindDateTimePickerEvents() {
+      const timeSlots = this.elements.structuredInput.querySelectorAll('.keystone-time-slot');
+      const submitBtn = this.elements.structuredInput.querySelector('#keystone-submit-datetime');
+      const dateInput = this.elements.structuredInput.querySelector('#keystone-date');
+      let selectedTime = null;
+      
+      timeSlots.forEach(slot => {
+        slot.addEventListener('click', () => {
+          timeSlots.forEach(s => s.classList.remove('selected'));
+          slot.classList.add('selected');
+          selectedTime = slot.dataset.time;
+          submitBtn.disabled = false;
+        });
+      });
+      
+      submitBtn.addEventListener('click', () => {
+        const date = dateInput.value;
+        if (date && selectedTime) {
+          const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric'
+          });
+          const message = `I'd like to book for ${formattedDate} at ${selectedTime}`;
+          this.sendMessage(message);
+        }
+      });
+    }
+    
+    bindContactFormEvents() {
+      const submitBtn = this.elements.structuredInput.querySelector('#keystone-submit-contact');
+      
+      submitBtn.addEventListener('click', () => {
+        const nameInput = this.elements.structuredInput.querySelector('#keystone-name');
+        const phoneInput = this.elements.structuredInput.querySelector('#keystone-phone');
+        const emailInput = this.elements.structuredInput.querySelector('#keystone-email');
+        
+        const parts = [];
+        if (nameInput && nameInput.value.trim()) {
+          parts.push(`Name: ${nameInput.value.trim()}`);
+        }
+        if (phoneInput && phoneInput.value.trim()) {
+          parts.push(`Phone: ${phoneInput.value.trim()}`);
+        }
+        if (emailInput && emailInput.value.trim()) {
+          parts.push(`Email: ${emailInput.value.trim()}`);
+        }
+        
+        if (parts.length > 0) {
+          const message = parts.join(', ');
+          this.sendMessage(message);
+        }
+      });
     }
     
     addMessage(role, content) {
@@ -466,6 +891,39 @@
     
     scrollToBottom() {
       this.elements.messages.scrollTop = this.elements.messages.scrollHeight;
+    }
+    
+    async clearSession() {
+      if (this.isLoading) return;
+      
+      const confirmed = window.confirm('Start a new conversation? Your current chat history will be cleared.');
+      if (!confirmed) return;
+      
+      this.elements.clear.disabled = true;
+      
+      try {
+        await fetch(
+          `${this.apiUrl}/chat/session/${this.businessId}/${this.sessionId}`,
+          { method: 'DELETE' }
+        );
+      } catch (error) {
+        console.error('Failed to clear session on server:', error);
+      }
+      
+      const storageKey = `keystone_session_${this.businessId}`;
+      localStorage.removeItem(storageKey);
+      
+      this.sessionId = 'sess_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+      localStorage.setItem(storageKey, this.sessionId);
+      
+      this.messages = [];
+      this.elements.messages.innerHTML = '';
+      this.showTextInput();
+      
+      await this.fetchGreeting();
+      
+      this.elements.clear.disabled = false;
+      this.elements.input.focus();
     }
   }
   
