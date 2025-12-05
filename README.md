@@ -2,6 +2,18 @@
 
 AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitness studios, clinics).
 
+## Screenshots
+
+<p align="center">
+  <img src="frontend/product_images/01-dashboard.png" alt="Dashboard" width="800"/>
+</p>
+
+<p align="center">
+  <img src="frontend/product_images/12-chat-demo.png" alt="Chat Demo" width="800"/>
+</p>
+
+[View all screenshots](SCREENSHOTS.md)
+
 ## Features
 
 ### V1 - Core Features
