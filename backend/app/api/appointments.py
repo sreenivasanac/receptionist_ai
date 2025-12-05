@@ -1,13 +1,10 @@
 """Appointments API endpoints for V2."""
-import uuid
-import json
 import yaml
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from app.db.database import get_db_connection
+from app.repositories import appointment_repo, business_repo
 from app.models.appointment import Appointment, AppointmentCreate, AppointmentUpdate
 
 router = APIRouter(prefix="/admin", tags=["Appointments"])
@@ -22,7 +19,6 @@ def get_service_name_from_config(config_yaml: str, service_id: str) -> str:
         for service in config.get('services', []):
             if service.get('id') == service_id:
                 return service.get('name')
-        # Fallback: format service_id as title
         return service_id.replace('_', ' ').title()
     except:
         return service_id.replace('_', ' ').title() if service_id else None
@@ -37,199 +33,62 @@ async def list_appointments(
     limit: int = Query(default=50, le=100)
 ):
     """List appointments for a business with optional filters."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        
-        # Get business config for service names
-        cursor.execute("SELECT config_yaml FROM businesses WHERE id = ?", (business_id,))
-        biz = cursor.fetchone()
-        config_yaml = biz["config_yaml"] if biz else None
-        
-        query = """
-            SELECT a.*, st.name as staff_name
-            FROM appointments a
-            LEFT JOIN staff st ON a.staff_id = st.id
-            WHERE a.business_id = ?
-        """
-        params = [business_id]
-        
-        if status:
-            query += " AND a.status = ?"
-            params.append(status)
-        
-        if date_from:
-            query += " AND a.date >= ?"
-            params.append(date_from)
-        
-        if date_to:
-            query += " AND a.date <= ?"
-            params.append(date_to)
-        
-        query += " ORDER BY a.date DESC, a.time DESC LIMIT ?"
-        params.append(limit)
-        
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-        
-        return [
-            Appointment(
-                id=row["id"],
-                business_id=row["business_id"],
-                customer_id=row["customer_id"],
-                service_id=row["service_id"],
-                staff_id=row["staff_id"],
-                customer_name=row["customer_name"],
-                customer_phone=row["customer_phone"],
-                customer_email=row["customer_email"],
-                date=row["date"],
-                time=row["time"],
-                duration_minutes=row["duration_minutes"],
-                status=row["status"],
-                notes=row["notes"],
-                service_name=get_service_name_from_config(config_yaml, row["service_id"]),
-                staff_name=row["staff_name"],
-                created_at=row["created_at"],
-                updated_at=row["updated_at"]
-            )
-            for row in rows
-        ]
+    config_yaml = business_repo.get_config_yaml(business_id)
+    appointments = appointment_repo.find_by_business(
+        business_id, status, date_from, date_to, limit
+    )
+    
+    for appt in appointments:
+        appt.service_name = get_service_name_from_config(config_yaml, appt.service_id)
+    
+    return appointments
 
 
 @router.get("/{business_id}/appointments/{appointment_id}", response_model=Appointment)
 async def get_appointment(business_id: str, appointment_id: str):
     """Get a specific appointment."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        
-        # Get business config for service name
-        cursor.execute("SELECT config_yaml FROM businesses WHERE id = ?", (business_id,))
-        biz = cursor.fetchone()
-        config_yaml = biz["config_yaml"] if biz else None
-        
-        cursor.execute("""
-            SELECT a.*, st.name as staff_name
-            FROM appointments a
-            LEFT JOIN staff st ON a.staff_id = st.id
-            WHERE a.id = ? AND a.business_id = ?
-        """, (appointment_id, business_id))
-        
-        row = cursor.fetchone()
-        if not row:
-            raise HTTPException(status_code=404, detail="Appointment not found")
-        
-        return Appointment(
-            id=row["id"],
-            business_id=row["business_id"],
-            customer_id=row["customer_id"],
-            service_id=row["service_id"],
-            staff_id=row["staff_id"],
-            customer_name=row["customer_name"],
-            customer_phone=row["customer_phone"],
-            customer_email=row["customer_email"],
-            date=row["date"],
-            time=row["time"],
-            duration_minutes=row["duration_minutes"],
-            status=row["status"],
-            notes=row["notes"],
-            service_name=get_service_name_from_config(config_yaml, row["service_id"]),
-            staff_name=row["staff_name"],
-            created_at=row["created_at"],
-            updated_at=row["updated_at"]
-        )
+    config_yaml = business_repo.get_config_yaml(business_id)
+    appointment = appointment_repo.find_with_staff_name(business_id, appointment_id)
+    
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    appointment.service_name = get_service_name_from_config(config_yaml, appointment.service_id)
+    return appointment
 
 
 @router.post("/{business_id}/appointments", response_model=Appointment)
 async def create_appointment(business_id: str, data: AppointmentCreate):
     """Create a new appointment (admin booking)."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        
-        appointment_id = str(uuid.uuid4())
-        now = datetime.now().isoformat()
-        
-        cursor.execute("""
-            INSERT INTO appointments 
-            (id, business_id, customer_id, service_id, staff_id, customer_name,
-             customer_phone, customer_email, date, time, duration_minutes,
-             status, notes, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, ?, ?)
-        """, (
-            appointment_id, business_id, data.customer_id, data.service_id,
-            data.staff_id, data.customer_name, data.customer_phone,
-            data.customer_email, data.date, data.time, data.duration_minutes,
-            data.notes, now, now
-        ))
-        conn.commit()
-        
-        return await get_appointment(business_id, appointment_id)
+    appointment = appointment_repo.create(business_id, data)
+    
+    config_yaml = business_repo.get_config_yaml(business_id)
+    appointment.service_name = get_service_name_from_config(config_yaml, appointment.service_id)
+    
+    return appointment
 
 
 @router.put("/{business_id}/appointments/{appointment_id}", response_model=Appointment)
 async def update_appointment(business_id: str, appointment_id: str, data: AppointmentUpdate):
     """Update an appointment."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        
-        # Build update query
-        updates = []
-        params = []
-        
-        if data.service_id is not None:
-            updates.append("service_id = ?")
-            params.append(data.service_id)
-        if data.date is not None:
-            updates.append("date = ?")
-            params.append(data.date)
-        if data.time is not None:
-            updates.append("time = ?")
-            params.append(data.time)
-        if data.duration_minutes is not None:
-            updates.append("duration_minutes = ?")
-            params.append(data.duration_minutes)
-        if data.staff_id is not None:
-            updates.append("staff_id = ?")
-            params.append(data.staff_id)
-        if data.status is not None:
-            updates.append("status = ?")
-            params.append(data.status)
-        if data.notes is not None:
-            updates.append("notes = ?")
-            params.append(data.notes)
-        
-        if not updates:
-            return await get_appointment(business_id, appointment_id)
-        
-        updates.append("updated_at = ?")
-        params.append(datetime.now().isoformat())
-        params.extend([appointment_id, business_id])
-        
-        cursor.execute(f"""
-            UPDATE appointments SET {', '.join(updates)}
-            WHERE id = ? AND business_id = ?
-        """, params)
-        conn.commit()
-        
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Appointment not found")
-        
-        return await get_appointment(business_id, appointment_id)
+    appointment = appointment_repo.update(business_id, appointment_id, data)
+    
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    config_yaml = business_repo.get_config_yaml(business_id)
+    appointment.service_name = get_service_name_from_config(config_yaml, appointment.service_id)
+    
+    return appointment
 
 
 @router.delete("/{business_id}/appointments/{appointment_id}")
 async def delete_appointment(business_id: str, appointment_id: str):
     """Delete an appointment."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute(
-            "DELETE FROM appointments WHERE id = ? AND business_id = ?",
-            (appointment_id, business_id)
-        )
-        conn.commit()
-        
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Appointment not found")
-        
-        return {"message": "Appointment deleted"}
+    if not appointment_repo.delete_by_id_and_business(appointment_id, business_id):
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    return {"message": "Appointment deleted"}
 
 
 @router.post("/{business_id}/appointments/{appointment_id}/status")
@@ -239,15 +98,7 @@ async def update_appointment_status(business_id: str, appointment_id: str, statu
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
     
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE appointments SET status = ?, updated_at = ?
-            WHERE id = ? AND business_id = ?
-        """, (status, datetime.now().isoformat(), appointment_id, business_id))
-        conn.commit()
-        
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Appointment not found")
-        
-        return {"appointment_id": appointment_id, "status": status}
+    if not appointment_repo.update_status(business_id, appointment_id, status):
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    return {"appointment_id": appointment_id, "status": status}
