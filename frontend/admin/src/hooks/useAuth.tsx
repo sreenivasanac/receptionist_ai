@@ -58,29 +58,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
   
   const login = async (username: string, role: string) => {
-    const response = await api.post('/auth/login', { username, role })
-    const { user_id, business: bizData, ...userData } = response
+    const response = await api.post<{
+      user_id: string
+      username: string
+      email?: string
+      role: string
+      business_id?: string
+      business?: Business
+    }>('/auth/login', { username, role })
     
     const userObj: User = {
-      id: user_id,
-      username: userData.username,
-      email: userData.email,
-      role: userData.role,
-      business_id: userData.business_id,
+      id: response.user_id,
+      username: response.username,
+      email: response.email,
+      role: response.role,
+      business_id: response.business_id,
     }
     
     setUser(userObj)
     localStorage.setItem('keystone_user', JSON.stringify(userObj))
     
-    if (bizData) {
-      setBusiness(bizData)
-      localStorage.setItem('keystone_business', JSON.stringify(bizData))
+    if (response.business) {
+      setBusiness(response.business)
+      localStorage.setItem('keystone_business', JSON.stringify(response.business))
     }
   }
   
   const signup = async (data: SignupData) => {
-    const response = await api.post('/auth/signup', data)
-    
+    await api.post('/auth/signup', data)
     await login(data.username, data.role)
   }
   

@@ -112,13 +112,15 @@ export default function Settings() {
                 </div>
                 <button
                   onClick={() => handleToggleFeature(feature.key)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
-                    features[feature.key] ? 'bg-primary-600' : 'bg-gray-300'
+                  className={`relative w-14 h-7 rounded-full transition-colors shadow-inner border-2 ${
+                    features[feature.key] 
+                      ? 'bg-green-500 border-green-600' 
+                      : 'bg-gray-200 border-gray-400'
                   }`}
                 >
                   <span
-                    className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                      features[feature.key] ? 'left-7' : 'left-1'
+                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow-md ${
+                      features[feature.key] ? 'left-7' : 'left-0.5'
                     }`}
                   />
                 </button>

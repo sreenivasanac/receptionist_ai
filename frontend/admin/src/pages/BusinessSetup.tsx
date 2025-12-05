@@ -39,6 +39,9 @@ export default function BusinessSetup() {
     walk_ins: '',
   })
   
+  const [services, setServices] = useState<Array<{ id: string; name: string; duration_minutes: number; price: number; description: string }>>([])
+  const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
+  
   useEffect(() => {
     if (business?.id) {
       loadConfig()
@@ -78,6 +81,9 @@ export default function BusinessSetup() {
         deposit_amount: cfg.policies?.deposit_amount || 0,
         walk_ins: cfg.policies?.walk_ins || '',
       })
+      
+      // Populate services
+      setServices(cfg.services || [])
     } catch (error) {
       console.error('Failed to load config:', error)
     } finally {
@@ -100,6 +106,7 @@ export default function BusinessSetup() {
         email: basicInfo.email,
         hours: hours,
         policies: policies,
+        services: services,
       }
       
       await api.put(`/business/${business.id}/config`, updatedConfig)
@@ -120,6 +127,31 @@ export default function BusinessSetup() {
         [field]: value,
       }
     }))
+  }
+  
+  const handleAddService = () => {
+    const newService = {
+      id: `service_${Date.now()}`,
+      name: 'New Service',
+      duration_minutes: 30,
+      price: 0,
+      description: '',
+    }
+    setServices([...services, newService])
+    setEditingServiceId(newService.id)
+  }
+  
+  const handleUpdateService = (id: string, field: string, value: string | number) => {
+    setServices(services.map(s => 
+      s.id === id ? { ...s, [field]: value } : s
+    ))
+  }
+  
+  const handleDeleteService = (id: string) => {
+    setServices(services.filter(s => s.id !== id))
+    if (editingServiceId === id) {
+      setEditingServiceId(null)
+    }
   }
   
   if (loading) {
@@ -304,23 +336,108 @@ export default function BusinessSetup() {
           </div>
         </div>
         
-        {/* Services Preview */}
+        {/* Services */}
         <div className="card">
-          <h2 className="text-lg font-semibold text-card-foreground mb-4">Services</h2>
-          {config?.services && config.services.length > 0 ? (
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-card-foreground">Services</h2>
+            <button
+              onClick={handleAddService}
+              className="px-3 py-1.5 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              + Add Service
+            </button>
+          </div>
+          {services.length > 0 ? (
             <div className="space-y-3">
-              {config.services.map((service) => (
-                <div key={service.id} className="flex justify-between items-center p-3 bg-secondary/30 rounded-lg">
-                  <div>
-                    <p className="font-medium text-card-foreground">{service.name}</p>
-                    <p className="text-sm text-muted-foreground">{service.duration_minutes} min</p>
-                  </div>
-                  <p className="font-semibold text-primary">${service.price}</p>
+              {services.map((service) => (
+                <div key={service.id} className="p-4 bg-secondary/30 rounded-lg">
+                  {editingServiceId === service.id ? (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Service Name</label>
+                          <input
+                            type="text"
+                            value={service.name}
+                            onChange={(e) => handleUpdateService(service.id, 'name', e.target.value)}
+                            className="input-field"
+                            placeholder="Service name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
+                          <input
+                            type="text"
+                            value={service.description}
+                            onChange={(e) => handleUpdateService(service.id, 'description', e.target.value)}
+                            className="input-field"
+                            placeholder="Brief description"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Duration (min)</label>
+                          <input
+                            type="number"
+                            value={service.duration_minutes}
+                            onChange={(e) => handleUpdateService(service.id, 'duration_minutes', Number(e.target.value))}
+                            className="input-field"
+                            min="5"
+                            step="5"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-muted-foreground mb-1">Price ($)</label>
+                          <input
+                            type="number"
+                            value={service.price}
+                            onChange={(e) => handleUpdateService(service.id, 'price', Number(e.target.value))}
+                            className="input-field"
+                            min="0"
+                            step="0.01"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          onClick={() => setEditingServiceId(null)}
+                          className="px-3 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                        >
+                          Done
+                        </button>
+                        <button
+                          onClick={() => handleDeleteService(service.id)}
+                          className="px-3 py-1.5 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="font-medium text-card-foreground">{service.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {service.duration_minutes} min {service.description && `• ${service.description}`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <p className="font-semibold text-primary">${service.price}</p>
+                        <button
+                          onClick={() => setEditingServiceId(service.id)}
+                          className="px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                        >
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">Services are pre-loaded based on your business type. They can be customized as needed.</p>
+            <p className="text-muted-foreground">No services configured. Click "Add Service" to create your first service.</p>
           )}
         </div>
       </div>

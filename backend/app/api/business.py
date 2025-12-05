@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Body
 import yaml
 
 from app.db.database import get_db_connection
@@ -116,7 +116,7 @@ async def get_business_config(business_id: str):
 
 
 @router.put("/{business_id}/config", response_model=dict)
-async def update_business_config(business_id: str, config: dict):
+async def update_business_config(business_id: str, config: dict = Body(...)):
     """Update business configuration from parsed dict (converts to YAML)."""
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -144,7 +144,7 @@ async def update_business_config(business_id: str, config: dict):
 
 
 @router.put("/{business_id}/config/yaml", response_model=dict)
-async def update_business_config_yaml(business_id: str, yaml_content: str):
+async def update_business_config_yaml(business_id: str, yaml_content: str = Body(...)):
     """Update business configuration from raw YAML string."""
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -186,7 +186,7 @@ async def get_features(business_id: str):
 
 
 @router.put("/{business_id}/features", response_model=dict)
-async def update_features(business_id: str, features: dict):
+async def update_features(business_id: str, features: dict = Body(...)):
     """Update enabled features for a business."""
     with get_db_connection() as conn:
         cursor = conn.cursor()
