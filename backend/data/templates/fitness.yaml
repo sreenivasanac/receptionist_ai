@@ -1,0 +1,88 @@
+# Fitness & Performance Vertical Template - Boutique Gyms, Pilates, Yoga, Personal Trainers, Recovery Studios
+name: ""
+location: ""
+phone: ""
+email: ""
+
+hours:
+  monday: { open: "05:30", close: "21:00" }
+  tuesday: { open: "05:30", close: "21:00" }
+  wednesday: { open: "05:30", close: "21:00" }
+  thursday: { open: "05:30", close: "21:00" }
+  friday: { open: "05:30", close: "20:00" }
+  saturday: { open: "07:00", close: "18:00" }
+  sunday: { open: "08:00", close: "16:00" }
+
+services:
+  - id: "class_yoga"
+    name: "Yoga Class"
+    duration_minutes: 60
+    price: 25
+    description: "All-levels yoga class focusing on breath and movement"
+  - id: "class_pilates"
+    name: "Pilates Class"
+    duration_minutes: 55
+    price: 30
+    description: "Core-strengthening Pilates mat class"
+  - id: "class_hiit"
+    name: "HIIT Class"
+    duration_minutes: 45
+    price: 25
+    description: "High-intensity interval training for maximum burn"
+  - id: "class_spin"
+    name: "Spin Class"
+    duration_minutes: 45
+    price: 28
+    description: "High-energy indoor cycling class"
+  - id: "personal_training"
+    name: "Personal Training Session"
+    duration_minutes: 60
+    price: 85
+    description: "One-on-one training with certified personal trainer"
+  - id: "personal_training_package"
+    name: "Personal Training 5-Pack"
+    duration_minutes: 60
+    price: 375
+    description: "5 personal training sessions at discounted rate"
+  - id: "intro_session"
+    name: "Intro Session"
+    duration_minutes: 30
+    price: 0
+    description: "Complimentary intro session for new members"
+  - id: "recovery_stretch"
+    name: "Assisted Stretch"
+    duration_minutes: 30
+    price: 45
+    description: "Guided stretching session for flexibility and recovery"
+  - id: "cryotherapy"
+    name: "Cryotherapy Session"
+    duration_minutes: 15
+    price: 50
+    description: "Whole body cryotherapy for recovery"
+  - id: "membership_monthly"
+    name: "Monthly Membership"
+    duration_minutes: 0
+    price: 99
+    description: "Unlimited classes for one month"
+
+policies:
+  cancellation: "Classes can be cancelled up to 4 hours before start time. Late cancels are subject to a $15 fee."
+  deposit: false
+  deposit_amount: 0
+  walk_ins: "Walk-ins welcome for classes with availability. Check schedule or call ahead."
+
+faqs:
+  - question: "Do I need to be in shape to start?"
+    answer: "Not at all! All fitness levels are welcome. Our instructors will help you modify exercises."
+  - question: "What should I bring to class?"
+    answer: "Bring a water bottle and wear comfortable workout clothes. Mats and equipment are provided."
+  - question: "Can I try a class before joining?"
+    answer: "Yes! We offer a free intro session for all new visitors."
+  - question: "How do I book a class?"
+    answer: "You can book through our app, website, or right here in this chat!"
+  - question: "What's your cancellation policy?"
+    answer: "Please cancel at least 4 hours before class to avoid a late cancellation fee."
+  - question: "Do you offer corporate memberships?"
+    answer: "Yes! We have special rates for companies. Contact us for corporate wellness packages."
+  - question: "Are showers available?"
+    answer: "Yes, we have full locker rooms with showers, towels, and complimentary toiletries."
