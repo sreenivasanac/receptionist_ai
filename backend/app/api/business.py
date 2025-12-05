@@ -14,6 +14,83 @@ from app.api.chat import invalidate_agent_cache
 router = APIRouter(prefix="/business", tags=["Business"])
 
 
+def sync_services_to_db(business_id: str, config_yaml: str):
+    """Sync services from YAML config to the services database table."""
+    if not config_yaml:
+        return
+    
+    try:
+        config = yaml.safe_load(config_yaml)
+        services = config.get('services', [])
+    except yaml.YAMLError:
+        return
+    
+    if not services:
+        return
+    
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        now = datetime.now().isoformat()
+        
+        # Get existing service IDs for this business
+        cursor.execute("SELECT id FROM services WHERE business_id = ?", (business_id,))
+        existing_ids = {row['id'] for row in cursor.fetchall()}
+        
+        new_ids = set()
+        for service in services:
+            service_id = service.get('id')
+            if not service_id:
+                continue
+            
+            new_ids.add(service_id)
+            
+            if service_id in existing_ids:
+                # Update existing service
+                cursor.execute("""
+                    UPDATE services 
+                    SET name = ?, description = ?, price = ?, duration_minutes = ?, 
+                        is_active = ?, updated_at = ?
+                    WHERE id = ? AND business_id = ?
+                """, (
+                    service.get('name', ''),
+                    service.get('description', ''),
+                    service.get('price', 0),
+                    service.get('duration_minutes', 60),
+                    1,  # is_active
+                    now,
+                    service_id,
+                    business_id
+                ))
+            else:
+                # Insert new service
+                cursor.execute("""
+                    INSERT INTO services (id, business_id, name, description, price, 
+                                         duration_minutes, is_active, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (
+                    service_id,
+                    business_id,
+                    service.get('name', ''),
+                    service.get('description', ''),
+                    service.get('price', 0),
+                    service.get('duration_minutes', 60),
+                    1,  # is_active
+                    now,
+                    now
+                ))
+        
+        # Mark removed services as inactive (don't delete to preserve history)
+        removed_ids = existing_ids - new_ids
+        if removed_ids:
+            placeholders = ','.join(['?' for _ in removed_ids])
+            cursor.execute(f"""
+                UPDATE services SET is_active = 0, updated_at = ?
+                WHERE business_id = ? AND id IN ({placeholders})
+            """, [now, business_id] + list(removed_ids))
+        
+        conn.commit()
+
+
 @router.get("/{business_id}", response_model=Business)
 async def get_business(business_id: str):
     """Get business by ID."""
@@ -86,8 +163,9 @@ async def update_business(business_id: str, update: BusinessUpdate):
             )
             conn.commit()
             
-            # If config_yaml was updated, invalidate agent cache
+            # If config_yaml was updated, sync services and invalidate agent cache
             if update.config_yaml is not None:
+                sync_services_to_db(business_id, update.config_yaml)
                 invalidate_agent_cache(business_id)
         
         return await get_business(business_id)
@@ -137,7 +215,8 @@ async def update_business_config(business_id: str, config: dict = Body(...)):
         """, (config_yaml, datetime.now().isoformat(), business_id))
         conn.commit()
         
-        # Invalidate agent cache so chatbot picks up the new config
+        # Sync services to DB and invalidate agent cache
+        sync_services_to_db(business_id, config_yaml)
         invalidate_agent_cache(business_id)
         
         return {"message": "Configuration updated", "config": config}
@@ -165,7 +244,8 @@ async def update_business_config_yaml(business_id: str, yaml_content: str = Body
         """, (yaml_content, datetime.now().isoformat(), business_id))
         conn.commit()
         
-        # Invalidate agent cache so chatbot picks up the new config
+        # Sync services to DB and invalidate agent cache
+        sync_services_to_db(business_id, yaml_content)
         invalidate_agent_cache(business_id)
         
         return {"message": "Configuration updated"}

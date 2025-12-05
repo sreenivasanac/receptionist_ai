@@ -294,19 +294,19 @@ def create_receptionist_agent(
         # Store service for booking
         toolkit.selected_service_id = service_id
         
-        # Set up calendar UI
+        # Set up calendar UI - pass all slots for 2 months
         toolkit.pending_input_type = "datetime_picker"
         toolkit.pending_input_config = {
             "min_date": result['calendar_ui_data'].get('min_date'),
             "max_date": result['calendar_ui_data'].get('max_date'),
             "available_dates": result['calendar_ui_data'].get('available_dates', []),
             "time_slots": result['calendar_ui_data'].get('time_slots', []),
-            "slots": slots[:10]  # Limit for display
+            "slots": slots  # All slots for 2 months
         }
         
-        # Format slots for display
+        # Format a few slots for display in message
         slot_list = []
-        for i, slot in enumerate(slots[:8]):
+        for i, slot in enumerate(slots[:5]):
             slot_list.append(f"- {slot['date']} at {slot['time']}" + (f" with {slot['staff_name']}" if slot.get('staff_name') else ""))
         
         return f"Here are the available times for {result.get('service_name', 'your appointment')}:\n\n" + "\n".join(slot_list) + "\n\nWhich time works best for you?"
