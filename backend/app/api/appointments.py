@@ -94,11 +94,27 @@ async def delete_appointment(business_id: str, appointment_id: str):
 @router.post("/{business_id}/appointments/{appointment_id}/status")
 async def update_appointment_status(business_id: str, appointment_id: str, status: str):
     """Update appointment status (shortcut endpoint)."""
+    from app.repositories import customer_repo
+    
     valid_statuses = ['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show']
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
     
+    # Get appointment before updating to access customer info
+    appointment = appointment_repo.find_with_staff_name(business_id, appointment_id)
+    if not appointment:
+        raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Update status
     if not appointment_repo.update_status(business_id, appointment_id, status):
         raise HTTPException(status_code=404, detail="Appointment not found")
+    
+    # Update customer visit tracking when marked as completed
+    if status == 'completed' and appointment.customer_id:
+        customer_repo.update_visit(
+            customer_id=appointment.customer_id,
+            visit_date=appointment.date,
+            service_id=appointment.service_id
+        )
     
     return {"appointment_id": appointment_id, "status": status}

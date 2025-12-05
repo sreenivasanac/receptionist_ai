@@ -35,7 +35,8 @@ from app.tools.customers import (
     identify_customer as customers_identify,
     get_customer_history as customers_get_history,
     create_or_update_customer,
-    get_rebooking_suggestion
+    get_rebooking_suggestion,
+    get_upcoming_appointments as customers_get_upcoming
 )
 
 
@@ -52,6 +53,7 @@ class ReceptionistToolkit:
         self.pending_input_config = None
         self.selected_service_id = None  # Track selected service for booking
         self.selected_slot_id = None  # Track selected time slot
+        self.pending_reschedule_appointment = None  # Track appointment being rescheduled
     
     def get_hours(self, day: Optional[str] = None) -> str:
         """Get business hours. Optionally specify a day (e.g., 'monday', 'saturday')."""
@@ -380,25 +382,50 @@ def create_receptionist_agent(
         return result['message']
     
     @tool
-    def reschedule_appointment_tool(appointment_id: str, new_slot_id: str) -> str:
+    def reschedule_appointment_tool(appointment_id: Optional[str] = None, new_slot_id: Optional[str] = None) -> str:
         """
         Reschedule an existing appointment to a new time.
         
         Args:
-            appointment_id: The appointment ID to reschedule
-            new_slot_id: New time slot ID from check_availability
+            appointment_id: The appointment ID to reschedule (optional - uses tracked appointment from get_upcoming_appointments_tool)
+            new_slot_id: New time slot ID (optional - uses tracked slot from calendar selection)
+        
+        Call this after:
+        1. Using get_upcoming_appointments_tool to find the appointment
+        2. Using check_availability_tool to show new times
+        3. Customer selects a new time from the calendar
+        
+        The IDs are automatically tracked from previous tool calls.
         """
         if not toolkit.business_id:
             return "Rescheduling is not available at this time."
         
+        # Use tracked appointment ID if not provided
+        actual_appointment_id = appointment_id
+        if not actual_appointment_id and toolkit.pending_reschedule_appointment:
+            actual_appointment_id = toolkit.pending_reschedule_appointment.get('appointment_id')
+        
+        if not actual_appointment_id:
+            return "No appointment found to reschedule. Please use get_upcoming_appointments_tool first to find the appointment."
+        
+        # Use tracked slot ID if not provided
+        actual_slot_id = new_slot_id or toolkit.selected_slot_id
+        if not actual_slot_id:
+            return "Please select a new time slot from the calendar first."
+        
         result = booking_reschedule_appointment(
             business_id=toolkit.business_id,
-            appointment_id=appointment_id,
-            new_slot_id=new_slot_id
+            appointment_id=actual_appointment_id,
+            new_slot_id=actual_slot_id
         )
         
         if 'error' in result:
             return result['error']
+        
+        # Clear reschedule state
+        toolkit.pending_reschedule_appointment = None
+        toolkit.selected_slot_id = None
+        toolkit.selected_service_id = None
         
         return result['message']
     
@@ -500,6 +527,46 @@ def create_receptionist_agent(
         return result['message']
     
     @tool
+    def get_upcoming_appointments_tool(customer_phone: str) -> str:
+        """
+        Get upcoming appointments for a customer by their phone number.
+        
+        Use this when a customer wants to reschedule or check their upcoming appointments.
+        Returns appointment details including appointment_id needed for rescheduling.
+        
+        Args:
+            customer_phone: Customer's phone number
+        """
+        if not toolkit.business_id:
+            return "Appointment lookup is not available."
+        
+        result = customers_get_upcoming(
+            business_id=toolkit.business_id,
+            customer_phone=customer_phone
+        )
+        
+        appointments = result.get('appointments', [])
+        if not appointments:
+            return result['message']
+        
+        # Store first appointment for potential rescheduling
+        if appointments:
+            toolkit.pending_reschedule_appointment = appointments[0]
+            toolkit.selected_service_id = appointments[0]['service_id']
+        
+        response = [result['message']]
+        if len(appointments) > 1:
+            response.append("\nYour upcoming appointments:")
+            for appt in appointments:
+                line = f"- {appt['service']} on {appt['date']} at {appt['time']}"
+                if appt.get('staff_name'):
+                    line += f" with {appt['staff_name']}"
+                line += f" (ID: {appt['appointment_id'][:8]})"
+                response.append(line)
+        
+        return "\n".join(response)
+    
+    @tool
     def get_customer_history_tool(customer_id: Optional[str] = None) -> str:
         """
         Get visit history for a returning customer.
@@ -580,6 +647,7 @@ def create_receptionist_agent(
         capture_lead_tool,
         add_to_waitlist_tool,
         identify_customer_tool,
+        get_upcoming_appointments_tool,
         get_customer_history_tool,
         suggest_rebooking_tool,
     ]

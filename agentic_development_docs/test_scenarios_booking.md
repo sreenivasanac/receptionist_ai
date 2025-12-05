@@ -519,20 +519,44 @@ Confirmation #: LASH9AM
 
 ---
 
-## Test Results Summary
+## Test Results Summary (API Testing - December 2024)
 
-| # | Scenario | Focus Area | Expected Outcome |
-|---|----------|------------|------------------|
-| 8 | Time Preference | Morning/afternoon filtering | Correct time slots shown |
-| 9 | Rescheduling | Change existing appointment | Old cancelled, new created |
-| 10 | Closed Day | Sunday booking attempt | Redirected to valid day |
-| 11 | FAQ Before Booking | Policy questions | Info provided, then booking |
-| 12 | Long Service | 3-hour balayage | Duration tracked correctly |
-| 13 | Service Comparison | Manicure vs Gel | Education then booking |
-| 14 | Walk-in Check | Same day availability | Policy + available slots |
-| 15 | Budget Questions | Price-focused customer | Affordable options shown |
-| 16 | Bridal Inquiry | Special event | Lead + consultation booking |
-| 17 | Service Not Offered | Massage request | Polite decline, alternatives |
+### After Fixes Applied
+
+| # | Scenario | Focus Area | Status | Notes |
+|---|----------|------------|--------|-------|
+| 8 | Time Preference | Morning filtering | ✓ PASS | Maria Garcia booked blowout at 10:00 |
+| 9 | Rescheduling | Change appointment | ✓ PASS | Improved with auto-tracked IDs |
+| 10 | Closed Day | Sunday booking | ✓ PASS | Agent correctly says "closed on Sundays" and offers alternatives |
+| 11 | FAQ Before Booking | Policy then booking | ✓ PASS | FAQs answered, booking completes with name+phone |
+| 12 | Long Service | 3-hour balayage | ✓ PASS | Sophie Turner booked with 180 min duration |
+| 13 | Service Comparison | Manicure vs Gel | ✓ PASS | Nicole Adams booked gel_nails |
+| 14 | Walk-in Check | Same day availability | ✓ PASS | Walk-in policy shown, booking completes |
+| 15 | Budget Questions | Price-focused | ✓ PASS | Prices shown, booking completes with combined name+phone |
+| 16 | Bridal Inquiry | Lead capture | ✓ PASS | Lead captured with bridal interest |
+| 17 | Service Not Offered | Unavailable service | ✓ PASS | Correctly declined massage, offered alternatives |
+
+### Fixes Applied (December 2024)
+
+1. **Enhanced booking prompts**: Added explicit instructions to call `book_appointment_tool` immediately when both name and phone are provided
+2. **Lead capture triggers**: Added keyword-based triggers for bridal/wedding, corporate, event inquiries
+3. **Closed day handling**: Added business hours awareness prompts to prevent hallucinated slots
+4. **Rescheduling flow**: Added `get_upcoming_appointments_tool` and explicit rescheduling instructions
+5. **New repository method**: Added `get_upcoming_by_phone()` for appointment lookup
+
+### Additional Fixes Applied (December 2024 - MVP Improvements)
+
+6. **Rescheduling tool auto-tracking**: `reschedule_appointment_tool` now auto-tracks appointment_id and slot_id from previous tool calls
+7. **Business hours validation**: Calendar service now validates service duration fits before business closing time
+8. **Appointment overlap detection**: `slot_available` now checks for overlapping appointments, not just exact time matches
+9. **Proactive customer recognition**: Updated prompts to automatically detect phone/email patterns and trigger `identify_customer_tool`
+10. **FAQ CRUD API**: Added `/admin/{business_id}/faqs` endpoints for FAQ management
+11. **Visit tracking on completion**: Customer visit count and favorite service now update when appointment status changes to "completed"
+12. **Database integrity**: Added unique constraints on (business_id, phone) and (business_id, email) for customers table
+
+### Remaining Minor Issues
+
+*None - all critical MVP issues addressed*
 
 ---
 

@@ -158,6 +158,46 @@ def create_or_update_customer(
     return {'customer_id': customer_id, 'created': True}
 
 
+def get_upcoming_appointments(
+    business_id: str,
+    customer_phone: str
+) -> dict:
+    """Get upcoming appointments for a customer by phone number."""
+    from datetime import datetime
+    
+    appointments = appointment_repo.get_upcoming_by_phone(business_id, customer_phone)
+    
+    if not appointments:
+        return {
+            'appointments': [],
+            'message': 'No upcoming appointments found for this phone number.'
+        }
+    
+    upcoming = []
+    for appt in appointments:
+        upcoming.append({
+            'appointment_id': appt['id'],
+            'service': appt['service_name'] or appt['service_id'].replace('_', ' ').title(),
+            'service_id': appt['service_id'],
+            'date': appt['date'],
+            'time': appt['time'],
+            'staff_name': appt['staff_name']
+        })
+    
+    if len(upcoming) == 1:
+        a = upcoming[0]
+        message = f"Found your upcoming appointment: {a['service']} on {a['date']} at {a['time']}"
+        if a['staff_name']:
+            message += f" with {a['staff_name']}"
+    else:
+        message = f"Found {len(upcoming)} upcoming appointments."
+    
+    return {
+        'appointments': upcoming,
+        'message': message
+    }
+
+
 def get_rebooking_suggestion(
     business_id: str,
     customer_id: str

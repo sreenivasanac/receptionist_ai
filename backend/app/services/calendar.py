@@ -115,10 +115,20 @@ def generate_time_slots(
     
     now = datetime.now()
     
+    # Calculate actual close time from business hours for duration validation
+    actual_close = datetime.combine(date.date(), close_time.time())
+    
     while current_time + timedelta(minutes=duration_minutes) <= end_time:
         time_str = current_time.strftime('%H:%M')
         
+        # Skip if in the past
         if date.date() == now.date() and current_time <= now:
+            current_time += timedelta(minutes=30)
+            continue
+        
+        # Ensure service fits before business closing time (not just preference end time)
+        slot_end_actual = current_time + timedelta(minutes=duration_minutes)
+        if slot_end_actual > actual_close:
             current_time += timedelta(minutes=30)
             continue
         
@@ -284,8 +294,8 @@ def book_appointment(
     if staff_id:
         staff_name = staff_repo.get_name(staff_id)
     
-    # Check slot availability
-    if not appointment_repo.slot_available(business_id, date, time):
+    # Check slot availability with overlap detection
+    if not appointment_repo.slot_available(business_id, date, time, duration_minutes=duration):
         return {'error': 'This time slot is no longer available'}
     
     # Find or create customer

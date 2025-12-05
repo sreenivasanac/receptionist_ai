@@ -254,12 +254,27 @@ class CustomerRepository(BaseRepository[Customer]):
         visit_date: str,
         service_id: Optional[str] = None
     ):
-        """Update customer visit count and last visit date."""
+        """Update customer visit count, last visit date, and favorite service."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
             now = self._now()
             
+            # Determine favorite service based on most booked
+            favorite = service_id
             if service_id:
+                cursor.execute("""
+                    SELECT service_id, COUNT(*) as count 
+                    FROM appointments 
+                    WHERE customer_id = ? AND status = 'completed'
+                    GROUP BY service_id 
+                    ORDER BY count DESC 
+                    LIMIT 1
+                """, (customer_id,))
+                row = cursor.fetchone()
+                if row:
+                    favorite = row['service_id']
+            
+            if favorite:
                 cursor.execute("""
                     UPDATE customers 
                     SET visit_count = visit_count + 1, 
@@ -267,7 +282,7 @@ class CustomerRepository(BaseRepository[Customer]):
                         favorite_service_id = ?,
                         updated_at = ?
                     WHERE id = ?
-                """, (visit_date, service_id, now, customer_id))
+                """, (visit_date, favorite, now, customer_id))
             else:
                 cursor.execute("""
                     UPDATE customers 

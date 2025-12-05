@@ -225,4 +225,8 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_waitlist_business ON waitlist(business_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_waitlist_status ON waitlist(status)")
         
+        # Unique constraints for data integrity
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_business_phone ON customers(business_id, phone) WHERE phone IS NOT NULL")
+        cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_business_email ON customers(business_id, email) WHERE email IS NOT NULL")
+        
         conn.commit()
