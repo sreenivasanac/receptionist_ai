@@ -19,6 +19,12 @@ class AppointmentRepository(BaseRepository[Appointment]):
         staff_name: Optional[str] = None
     ) -> Appointment:
         """Convert a database row to an Appointment model."""
+        resolved_staff_name = staff_name
+        if resolved_staff_name is None:
+            try:
+                resolved_staff_name = row["staff_name"]
+            except (IndexError, KeyError):
+                resolved_staff_name = None
         return Appointment(
             id=row["id"],
             business_id=row["business_id"],
@@ -34,7 +40,7 @@ class AppointmentRepository(BaseRepository[Appointment]):
             status=row["status"],
             notes=row["notes"],
             service_name=service_name,
-            staff_name=staff_name or row.get("staff_name"),
+            staff_name=resolved_staff_name,
             created_at=row["created_at"],
             updated_at=row["updated_at"]
         )
