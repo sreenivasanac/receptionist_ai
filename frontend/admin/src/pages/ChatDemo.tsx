@@ -78,30 +78,78 @@ export default function ChatDemo() {
             <h3 className="text-xl font-semibold text-card-foreground mb-2">{business.name}</h3>
             <p className="text-muted-foreground mb-6">Your AI-powered receptionist is ready!</p>
             
-            <div className="bg-card rounded-lg p-6 max-w-md mx-auto shadow-sm">
-              <h4 className="font-medium mb-3">Try asking:</h4>
-              <ul className="text-left text-sm text-muted-foreground space-y-2">
-                <li className="flex items-center gap-2">
-                  <span className="text-primary">•</span>
-                  "What are your hours?"
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-primary">•</span>
-                  "What services do you offer?"
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-primary">•</span>
-                  "How much is [service name]?"
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-primary">•</span>
-                  "Do you accept walk-ins?"
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-primary">•</span>
-                  "What's your cancellation policy?"
-                </li>
-              </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+              <div className="bg-card rounded-lg p-5 shadow-sm text-left">
+                <h4 className="font-medium mb-3 text-primary">Book an Appointment</h4>
+                <ul className="text-sm text-muted-foreground space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>"I'd like to book a Women's Haircut for next Tuesday at 2pm"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>"Can I schedule an appointment with Sarah for a Balayage?"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">•</span>
+                    <span>"What times are available tomorrow afternoon?"</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="bg-card rounded-lg p-5 shadow-sm text-left">
+                <h4 className="font-medium mb-3 text-green-600">Reschedule or Cancel</h4>
+                <ul className="text-sm text-muted-foreground space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">•</span>
+                    <span>"I need to reschedule my appointment to next week"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">•</span>
+                    <span>"Can I change my 10am appointment to 2pm?"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 mt-1">•</span>
+                    <span>"I need to cancel my appointment for tomorrow"</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="bg-card rounded-lg p-5 shadow-sm text-left">
+                <h4 className="font-medium mb-3 text-blue-600">General Questions</h4>
+                <ul className="text-sm text-muted-foreground space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-1">•</span>
+                    <span>"What are your hours on Saturday?"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-1">•</span>
+                    <span>"How much does a Men's Haircut cost?"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 mt-1">•</span>
+                    <span>"Do you offer any hair coloring services?"</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="bg-card rounded-lg p-5 shadow-sm text-left">
+                <h4 className="font-medium mb-3 text-purple-600">Waitlist & Special Requests</h4>
+                <ul className="text-sm text-muted-foreground space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-600 mt-1">•</span>
+                    <span>"No slots available? Add me to the waitlist please"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-600 mt-1">•</span>
+                    <span>"It's my birthday next week - any specials?"</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-purple-600 mt-1">•</span>
+                    <span>"I'm looking for bridal hair services"</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
           

@@ -459,6 +459,12 @@
   box-shadow: none;
 }
 
+.keystone-chat-send svg {
+  width: 20px;
+  height: 20px;
+  fill: white;
+}
+
 /* Powered By */
 .keystone-powered-by {
   text-align: center;
@@ -474,6 +480,9 @@
   padding: 16px 20px;
   border-top: 1px solid var(--keystone-border);
   background: #f8fafc;
+  max-height: 350px;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .keystone-service-item {
@@ -481,12 +490,11 @@
   padding: 14px;
   background: white;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  border: 1px solid transparent;
+  border: 1px solid var(--keystone-border);
 }
 
 .keystone-service-item:hover {
   border-color: var(--keystone-primary);
-  transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
@@ -495,6 +503,178 @@
   border-radius: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
+  width: 100%;
+  margin-top: 12px;
+  background: var(--keystone-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.keystone-submit-btn:hover:not(:disabled) {
+  background: var(--keystone-primary-hover);
+}
+
+.keystone-submit-btn:disabled {
+  background: var(--keystone-border);
+  cursor: not-allowed;
+}
+
+/* Service List */
+.keystone-service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.keystone-service-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.keystone-service-item input {
+  accent-color: var(--keystone-primary);
+}
+
+.keystone-service-item.selected {
+  border-color: var(--keystone-primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.keystone-service-info {
+  flex: 1;
+}
+
+.keystone-service-name {
+  font-weight: 500;
+  color: var(--keystone-text);
+}
+
+.keystone-service-details {
+  font-size: 13px;
+  color: var(--keystone-text-light);
+}
+
+.keystone-service-price {
+  font-weight: 600;
+  color: var(--keystone-primary);
+}
+
+/* DateTime Picker */
+.keystone-datetime-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.keystone-date-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  color: var(--keystone-text);
+  box-sizing: border-box;
+}
+
+.keystone-date-input:focus {
+  outline: none;
+  border-color: var(--keystone-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.keystone-time-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.keystone-time-slot {
+  padding: 10px 8px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  background: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.keystone-time-slot:hover {
+  border-color: var(--keystone-primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.keystone-time-slot.selected {
+  background: var(--keystone-primary);
+  color: white;
+  border-color: var(--keystone-primary);
+}
+
+.keystone-no-slots {
+  color: var(--keystone-text-light);
+  font-size: 14px;
+  text-align: center;
+  padding: 16px;
+}
+
+/* Contact Form */
+.keystone-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.keystone-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.keystone-form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--keystone-text);
+}
+
+.keystone-form-group input {
+  padding: 12px 14px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  color: var(--keystone-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.keystone-form-group input::placeholder {
+  color: var(--keystone-text-light);
+}
+
+.keystone-form-group input:focus {
+  outline: none;
+  border-color: var(--keystone-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Structured Input Header */
+.keystone-structured-input h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--keystone-text);
 }
 
 /* Mobile Responsive */
@@ -962,11 +1142,17 @@
       submitBtn.addEventListener('click', () => {
         const selected = [];
         this.elements.structuredInput.querySelectorAll('input:checked').forEach(input => {
-          selected.push(input.dataset.name);
+          selected.push({
+            id: input.value,
+            name: input.dataset.name
+          });
         });
         
         if (selected.length > 0) {
-          const message = `I'd like to book: ${selected.join(', ')}`;
+          // Send service ID in a parseable format for the backend
+          const serviceIds = selected.map(s => s.id).join(', ');
+          const serviceNames = selected.map(s => s.name).join(', ');
+          const message = `I'd like to book: ${serviceNames} [service_id:${serviceIds}]`;
           this.sendMessage(message);
         }
       });

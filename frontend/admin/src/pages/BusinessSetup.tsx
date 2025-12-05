@@ -15,6 +15,21 @@ interface BusinessConfig {
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
+const TIME_OPTIONS = [
+  '06:00', '06:30', '07:00', '07:30', '08:00', '08:30', '09:00', '09:30',
+  '10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30',
+  '14:00', '14:30', '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
+  '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30', '22:00'
+]
+
+const formatTimeDisplay = (time: string) => {
+  const [hours, minutes] = time.split(':')
+  const hour = parseInt(hours)
+  const ampm = hour >= 12 ? 'PM' : 'AM'
+  const hour12 = hour % 12 || 12
+  return `${hour12}:${minutes} ${ampm}`
+}
+
 export default function BusinessSetup() {
   const { business } = useAuth()
   const [config, setConfig] = useState<BusinessConfig>({})
@@ -263,23 +278,27 @@ export default function BusinessSetup() {
                   <span className="text-sm text-muted-foreground">Closed</span>
                 </label>
                 {!hours[day]?.closed && (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="time"
-                        value={hours[day]?.open || '09:00'}
-                        onChange={(e) => handleHoursChange(day, 'open', e.target.value)}
-                        className="input-field w-32 py-1.5"
-                      />
-                      <span className="text-muted-foreground">to</span>
-                      <input
-                        type="time"
-                        value={hours[day]?.close || '18:00'}
-                        onChange={(e) => handleHoursChange(day, 'close', e.target.value)}
-                        className="input-field w-32 py-1.5"
-                      />
-                    </div>
-                  </>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={hours[day]?.open || '09:00'}
+                      onChange={(e) => handleHoursChange(day, 'open', e.target.value)}
+                      className="input-field w-32 py-1.5"
+                    >
+                      {TIME_OPTIONS.map((time) => (
+                        <option key={time} value={time}>{formatTimeDisplay(time)}</option>
+                      ))}
+                    </select>
+                    <span className="text-muted-foreground">to</span>
+                    <select
+                      value={hours[day]?.close || '18:00'}
+                      onChange={(e) => handleHoursChange(day, 'close', e.target.value)}
+                      className="input-field w-32 py-1.5"
+                    >
+                      {TIME_OPTIONS.map((time) => (
+                        <option key={time} value={time}>{formatTimeDisplay(time)}</option>
+                      ))}
+                    </select>
+                  </div>
                 )}
               </div>
             ))}
