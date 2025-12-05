@@ -146,6 +146,30 @@ class AppointmentRepository(BaseRepository[Appointment]):
             row = cursor.fetchone()
             return dict(row) if row else None
     
+    def get_upcoming_by_phone(
+        self,
+        business_id: str,
+        customer_phone: str,
+        limit: int = 5
+    ) -> list[dict]:
+        """Get all upcoming appointments for a customer by phone."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            today = datetime.now().strftime('%Y-%m-%d')
+            cursor.execute("""
+                SELECT a.id, a.date, a.time, a.service_id, a.duration_minutes,
+                       a.staff_id, st.name as staff_name, s.name as service_name
+                FROM appointments a
+                LEFT JOIN staff st ON a.staff_id = st.id
+                LEFT JOIN services s ON a.service_id = s.id
+                WHERE a.business_id = ? AND a.customer_phone = ? 
+                AND a.status = 'scheduled' AND a.date >= ?
+                ORDER BY a.date, a.time
+                LIMIT ?
+            """, (business_id, customer_phone, today, limit))
+            
+            return [dict(row) for row in cursor.fetchall()]
+    
     def create(
         self,
         business_id: str,
@@ -325,25 +349,45 @@ class AppointmentRepository(BaseRepository[Appointment]):
         business_id: str,
         date: str,
         time: str,
-        exclude_id: Optional[str] = None
+        exclude_id: Optional[str] = None,
+        duration_minutes: int = 60
     ) -> bool:
-        """Check if a time slot is available."""
+        """Check if a time slot is available (no overlapping appointments)."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
             
+            # Get all appointments for that day to check for overlaps
             query = """
-                SELECT id FROM appointments 
-                WHERE business_id = ? AND date = ? AND time = ?
+                SELECT time, duration_minutes FROM appointments 
+                WHERE business_id = ? AND date = ?
                 AND status NOT IN ('cancelled', 'no_show')
             """
-            params = [business_id, date, time]
+            params = [business_id, date]
             
             if exclude_id:
                 query += " AND id != ?"
                 params.append(exclude_id)
             
             cursor.execute(query, params)
-            return cursor.fetchone() is None
+            existing = cursor.fetchall()
+            
+            # Convert times to minutes for easier comparison
+            def time_to_minutes(t: str) -> int:
+                h, m = map(int, t.split(':'))
+                return h * 60 + m
+            
+            new_start = time_to_minutes(time)
+            new_end = new_start + duration_minutes
+            
+            for row in existing:
+                existing_start = time_to_minutes(row['time'])
+                existing_end = existing_start + (row['duration_minutes'] or 60)
+                
+                # Check for overlap
+                if not (new_end <= existing_start or new_start >= existing_end):
+                    return False
+            
+            return True
     
     def get_customer_history(
         self,

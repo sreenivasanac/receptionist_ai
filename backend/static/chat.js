@@ -51,90 +51,184 @@
       style.id = 'keystone-chat-styles';
       style.textContent = `/* AI Receptionist Chat Widget Styles */
 .keystone-chat-widget {
-  --keystone-primary: #6366f1;
+  /* New Modern Palette matching Admin UI (Deep Slate & Indigo) */
+  --keystone-primary: #6366f1; /* Indigo */
   --keystone-primary-hover: #4f46e5;
   --keystone-bg: #ffffff;
-  --keystone-text: #1f2937;
-  --keystone-text-light: #6b7280;
-  --keystone-border: #e5e7eb;
+  --keystone-text: #1e293b; /* Slate 800 */
+  --keystone-text-light: #64748b; /* Slate 500 */
+  --keystone-border: #e2e8f0; /* Slate 200 */
+  
   --keystone-user-bg: #6366f1;
   --keystone-user-text: #ffffff;
-  --keystone-bot-bg: #f3f4f6;
-  --keystone-bot-text: #1f2937;
-  --keystone-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-  --keystone-radius: 16px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+  
+  --keystone-bot-bg: #f1f5f9; /* Slate 100 */
+  --keystone-bot-text: #1e293b;
+  
+  /* Enhanced Shadows & Radius */
+  --keystone-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --keystone-radius: 20px;
+  
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 24px;
+  right: 24px;
   z-index: 99999;
 }
+
+/* Import Inter font if not present in host */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+/* Chat Toggle Button */
 .keystone-chat-toggle {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   background: var(--keystone-primary);
   border: none;
   cursor: pointer;
-  box-shadow: var(--keystone-shadow);
+  box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.keystone-chat-toggle:hover { background: var(--keystone-primary-hover); transform: scale(1.05); }
-.keystone-chat-toggle svg { width: 28px; height: 28px; fill: white; }
-.keystone-chat-toggle.open .keystone-icon-chat { display: none; }
-.keystone-chat-toggle:not(.open) .keystone-icon-close { display: none; }
+
+.keystone-chat-toggle:hover {
+  background: var(--keystone-primary-hover);
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4);
+}
+
+.keystone-chat-toggle:active {
+  transform: scale(0.95);
+}
+
+.keystone-chat-toggle svg {
+  width: 32px;
+  height: 32px;
+  fill: white;
+  transition: transform 0.3s ease;
+}
+
+.keystone-chat-toggle.open .keystone-icon-chat {
+  display: none;
+}
+
+.keystone-chat-toggle:not(.open) .keystone-icon-close {
+  display: none;
+}
+
+.keystone-chat-toggle.open .keystone-icon-close {
+  transform: rotate(90deg);
+}
+
+/* Chat Container */
 .keystone-chat-container {
   position: absolute;
-  bottom: 75px;
+  bottom: 84px;
   right: 0;
-  width: 380px;
-  max-width: calc(100vw - 40px);
-  height: 550px;
-  max-height: calc(100vh - 120px);
+  width: 400px; /* Slightly wider */
+  max-width: calc(100vw - 48px);
+  height: 650px; /* Taller */
+  max-height: calc(100vh - 140px);
   background: var(--keystone-bg);
   border-radius: var(--keystone-radius);
   box-shadow: var(--keystone-shadow);
   display: none;
   flex-direction: column;
   overflow: hidden;
-  animation: keystone-slide-up 0.3s ease;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transform-origin: bottom right;
+  animation: keystone-scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.keystone-chat-container.open { display: flex; }
-@keyframes keystone-slide-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+
+.keystone-chat-container.open {
+  display: flex;
 }
+
+@keyframes keystone-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Chat Header */
 .keystone-chat-header {
   background: var(--keystone-primary);
+  background: linear-gradient(135deg, var(--keystone-primary), #4f46e5);
   color: white;
-  padding: 16px 20px;
+  padding: 20px 24px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
+
 .keystone-chat-header-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
+  backdrop-filter: blur(4px);
 }
-.keystone-chat-header-avatar svg { width: 24px; height: 24px; fill: white; }
-.keystone-chat-header-info { flex: 1; }
-.keystone-chat-header-title { font-weight: 600; font-size: 16px; margin: 0; }
-.keystone-chat-header-status { font-size: 12px; opacity: 0.9; }
-.keystone-chat-header-actions { display: flex; gap: 4px; }
-.keystone-chat-clear {
-  width: 32px;
-  height: 32px;
+
+.keystone-chat-header-avatar svg {
+  width: 26px;
+  height: 26px;
+  fill: white;
+}
+
+.keystone-chat-header-info {
+  flex: 1;
+}
+
+.keystone-chat-header-title {
+  font-weight: 600;
+  font-size: 17px;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.keystone-chat-header-status {
+  font-size: 13px;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.keystone-chat-header-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background-color: #4ade80;
   border-radius: 50%;
+  display: block;
+}
+
+.keystone-chat-header-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.keystone-chat-clear {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.15);
   border: none;
   cursor: pointer;
@@ -143,85 +237,201 @@
   justify-content: center;
   transition: all 0.2s ease;
 }
-.keystone-chat-clear:hover { background: rgba(255, 255, 255, 0.25); }
-.keystone-chat-clear svg { width: 16px; height: 16px; fill: white; }
-.keystone-chat-clear:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.keystone-chat-clear:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: rotate(90deg);
+}
+
+.keystone-chat-clear svg {
+  width: 18px;
+  height: 18px;
+  fill: white;
+}
+
+/* Chat Messages */
 .keystone-chat-messages {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  background-color: #ffffff;
 }
+
 .keystone-message {
   max-width: 85%;
-  padding: 12px 16px;
-  border-radius: 18px;
-  word-wrap: break-word;
+  padding: 14px 18px;
+  border-radius: 20px;
+  position: relative;
+  font-size: 15px;
 }
+
 .keystone-message-user {
   align-self: flex-end;
   background: var(--keystone-user-bg);
   color: var(--keystone-user-text);
   border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
 }
+
 .keystone-message-bot {
   align-self: flex-start;
   background: var(--keystone-bot-bg);
   color: var(--keystone-bot-text);
   border-bottom-left-radius: 4px;
 }
+
+.keystone-message-bot strong {
+  font-weight: 600;
+  color: var(--keystone-primary);
+}
+
+/* Confirmation Overlay (In-chat) */
+.keystone-confirm-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.keystone-confirm-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.keystone-confirm-dialog {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  width: 80%;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--keystone-border);
+  transform: scale(0.95);
+  transition: transform 0.2s ease;
+}
+
+.keystone-confirm-overlay.active .keystone-confirm-dialog {
+  transform: scale(1);
+}
+
+.keystone-confirm-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--keystone-text);
+}
+
+.keystone-confirm-text {
+  font-size: 14px;
+  color: var(--keystone-text-light);
+  margin-bottom: 20px;
+}
+
+.keystone-confirm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.keystone-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.keystone-btn-primary {
+  background: var(--keystone-primary);
+  color: white;
+}
+
+.keystone-btn-primary:hover {
+  background: var(--keystone-primary-hover);
+}
+
+.keystone-btn-secondary {
+  background: var(--keystone-bot-bg);
+  color: var(--keystone-text);
+}
+
+.keystone-btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+/* Typing Indicator */
 .keystone-typing {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 12px 16px;
+  gap: 6px;
+  padding: 16px 20px;
   background: var(--keystone-bot-bg);
-  border-radius: 18px;
+  border-radius: 20px;
   border-bottom-left-radius: 4px;
   align-self: flex-start;
+  width: fit-content;
 }
+
 .keystone-typing-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--keystone-text-light);
   animation: keystone-typing 1.4s ease-in-out infinite;
+  opacity: 0.5;
 }
-.keystone-typing-dot:nth-child(2) { animation-delay: 0.2s; }
-.keystone-typing-dot:nth-child(3) { animation-delay: 0.4s; }
-@keyframes keystone-typing {
-  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-4px); opacity: 1; }
-}
+
+/* Chat Input */
 .keystone-chat-input-container {
-  padding: 12px 16px;
+  padding: 16px 20px;
   border-top: 1px solid var(--keystone-border);
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: flex-end;
+  background: white;
 }
+
 .keystone-chat-input {
   flex: 1;
   padding: 12px 16px;
   border: 1px solid var(--keystone-border);
-  border-radius: 24px;
+  border-radius: 12px;
   outline: none;
-  font-size: 14px;
+  font-size: 15px;
   font-family: inherit;
   resize: none;
-  max-height: 100px;
-  min-height: 44px;
+  max-height: 120px;
+  min-height: 46px;
+  line-height: 1.5;
+  background: #f8fafc;
+  transition: all 0.2s;
 }
+
 .keystone-chat-input:focus {
   border-color: var(--keystone-primary);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
+
 .keystone-chat-send {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
   background: var(--keystone-primary);
   border: none;
   cursor: pointer;
@@ -231,189 +441,75 @@
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
-.keystone-chat-send:hover { background: var(--keystone-primary-hover); }
-.keystone-chat-send:disabled { background: var(--keystone-border); cursor: not-allowed; }
-.keystone-chat-send svg { width: 20px; height: 20px; fill: white; }
-.keystone-powered-by {
-  text-align: center;
-  padding: 8px;
-  font-size: 11px;
-  color: var(--keystone-text-light);
-  border-top: 1px solid var(--keystone-border);
-}
-.keystone-powered-by a { color: var(--keystone-primary); text-decoration: none; }
 
-/* Structured Input Styles */
-.keystone-structured-input {
-  padding: 12px 16px;
-  border-top: 1px solid var(--keystone-border);
-  background: #fafafa;
-}
-.keystone-structured-input h4 {
-  margin: 0 0 12px 0;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--keystone-text);
-}
-
-/* Service Select Styles */
-.keystone-service-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-.keystone-service-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
-  background: white;
-  border: 1px solid var(--keystone-border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.keystone-service-item:hover {
-  border-color: var(--keystone-primary);
-  background: #f8f7ff;
-}
-.keystone-service-item.selected {
-  border-color: var(--keystone-primary);
-  background: #eef2ff;
-}
-.keystone-service-item input[type="checkbox"] {
-  margin-top: 2px;
-  width: 18px;
-  height: 18px;
-  accent-color: var(--keystone-primary);
-}
-.keystone-service-info {
-  flex: 1;
-}
-.keystone-service-name {
-  font-weight: 500;
-  color: var(--keystone-text);
-  margin-bottom: 2px;
-}
-.keystone-service-details {
-  font-size: 12px;
-  color: var(--keystone-text-light);
-}
-.keystone-service-price {
-  font-weight: 600;
-  color: var(--keystone-primary);
-  white-space: nowrap;
-}
-
-/* Contact Form Styles */
-.keystone-contact-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.keystone-form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.keystone-form-group label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--keystone-text);
-}
-.keystone-form-group input {
-  padding: 10px 12px;
-  border: 1px solid var(--keystone-border);
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-}
-.keystone-form-group input:focus {
-  border-color: var(--keystone-primary);
-  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
-}
-
-/* DateTime Picker Styles */
-.keystone-datetime-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.keystone-date-input {
-  padding: 10px 12px;
-  border: 1px solid var(--keystone-border);
-  border-radius: 8px;
-  font-size: 14px;
-  font-family: inherit;
-  outline: none;
-  width: 100%;
-  box-sizing: border-box;
-}
-.keystone-date-input:focus {
-  border-color: var(--keystone-primary);
-}
-.keystone-time-slots {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.keystone-time-slot {
-  padding: 8px 12px;
-  border: 1px solid var(--keystone-border);
-  border-radius: 6px;
-  background: white;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.keystone-time-slot:hover {
-  border-color: var(--keystone-primary);
-  background: #f8f7ff;
-}
-.keystone-time-slot.selected {
-  border-color: var(--keystone-primary);
-  background: var(--keystone-primary);
-  color: white;
-}
-
-/* Submit Button */
-.keystone-submit-btn {
-  margin-top: 12px;
-  padding: 12px 20px;
-  background: var(--keystone-primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  width: 100%;
-}
-.keystone-submit-btn:hover {
+.keystone-chat-send:hover {
   background: var(--keystone-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.25);
 }
-.keystone-submit-btn:disabled {
+
+.keystone-chat-send:active {
+  transform: translateY(0);
+}
+
+.keystone-chat-send:disabled {
   background: var(--keystone-border);
   cursor: not-allowed;
-}
-.keystone-no-slots {
-  color: var(--keystone-text-light);
-  font-size: 13px;
-  padding: 12px;
-  text-align: center;
-  background: #fff5f5;
-  border-radius: 8px;
-  margin: 4px 0;
+  transform: none;
+  box-shadow: none;
 }
 
+/* Powered By */
+.keystone-powered-by {
+  text-align: center;
+  padding: 10px;
+  font-size: 11px;
+  color: var(--keystone-text-light);
+  background: #f8fafc;
+  border-top: 1px solid var(--keystone-border);
+}
+
+/* Structured Input Updates */
+.keystone-structured-input {
+  padding: 16px 20px;
+  border-top: 1px solid var(--keystone-border);
+  background: #f8fafc;
+}
+
+.keystone-service-item {
+  border-radius: 12px;
+  padding: 14px;
+  background: white;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  border: 1px solid transparent;
+}
+
+.keystone-service-item:hover {
+  border-color: var(--keystone-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.keystone-submit-btn {
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+/* Mobile Responsive */
 @media (max-width: 480px) {
-  .keystone-chat-widget { bottom: 10px; right: 10px; }
-  .keystone-chat-container { width: calc(100vw - 20px); height: calc(100vh - 100px); bottom: 70px; right: -10px; }
-  .keystone-chat-toggle { width: 54px; height: 54px; }
+  .keystone-chat-widget {
+    bottom: 16px;
+    right: 16px;
+  }
+  
+  .keystone-chat-container {
+    width: calc(100vw - 32px);
+    height: calc(100vh - 120px);
+    bottom: 80px;
+    right: 0;
+  }
 }`;
       document.head.appendChild(style);
     }
@@ -455,6 +551,17 @@
           
           <div class="keystone-chat-messages" id="keystone-messages"></div>
           
+          <div class="keystone-confirm-overlay" id="keystone-confirm-overlay">
+            <div class="keystone-confirm-dialog">
+              <h3 class="keystone-confirm-title">Reset Conversation?</h3>
+              <p class="keystone-confirm-text">This will clear your current chat history and start fresh.</p>
+              <div class="keystone-confirm-actions">
+                <button class="keystone-btn keystone-btn-secondary" id="keystone-confirm-cancel">Cancel</button>
+                <button class="keystone-btn keystone-btn-primary" id="keystone-confirm-yes">Yes, Reset</button>
+              </div>
+            </div>
+          </div>
+          
           <div id="keystone-structured-input"></div>
           
           <div class="keystone-chat-input-container" id="keystone-text-input">
@@ -488,14 +595,27 @@
         send: document.getElementById('keystone-send'),
         clear: document.getElementById('keystone-clear'),
         textInput: document.getElementById('keystone-text-input'),
-        structuredInput: document.getElementById('keystone-structured-input')
+        structuredInput: document.getElementById('keystone-structured-input'),
+        confirmOverlay: document.getElementById('keystone-confirm-overlay'),
+        confirmYes: document.getElementById('keystone-confirm-yes'),
+        confirmCancel: document.getElementById('keystone-confirm-cancel')
       };
     }
     
     bindEvents() {
       this.elements.toggle.addEventListener('click', () => this.toggleChat());
       this.elements.send.addEventListener('click', () => this.sendMessage());
-      this.elements.clear.addEventListener('click', () => this.clearSession());
+      this.elements.clear.addEventListener('click', () => this.showResetConfirmation());
+      
+      this.elements.confirmCancel.addEventListener('click', () => {
+        this.elements.confirmOverlay.classList.remove('active');
+      });
+      
+      this.elements.confirmYes.addEventListener('click', () => {
+        this.elements.confirmOverlay.classList.remove('active');
+        this.clearSession();
+      });
+      
       this.elements.input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
           e.preventDefault();
@@ -505,8 +625,13 @@
       
       this.elements.input.addEventListener('input', () => {
         this.elements.input.style.height = 'auto';
-        this.elements.input.style.height = Math.min(this.elements.input.scrollHeight, 100) + 'px';
+        this.elements.input.style.height = Math.min(this.elements.input.scrollHeight, 120) + 'px';
       });
+    }
+    
+    showResetConfirmation() {
+      if (this.isLoading) return;
+      this.elements.confirmOverlay.classList.add('active');
     }
     
     toggleChat() {
@@ -978,9 +1103,6 @@
     
     async clearSession() {
       if (this.isLoading) return;
-      
-      const confirmed = window.confirm('Start a new conversation? Your current chat history will be cleared.');
-      if (!confirmed) return;
       
       this.elements.clear.disabled = true;
       

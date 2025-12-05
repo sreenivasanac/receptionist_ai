@@ -2,13 +2,23 @@
 
 AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitness studios, clinics).
 
-## Features (V1 - Implemented)
+## Features
 
+### V1 - Core Features
 - **Business Information Queries** - Hours, pricing, services, location, policies, FAQs
 - **Embeddable Chat Widget** - Single script tag to add to any website
 - **Admin Panel** - Configure business info, manage staff, preview chatbot
 - **Industry Templates** - Pre-loaded configs for beauty, wellness, medical, fitness
 - **Conversation Context** - Session-based memory for natural conversations
+
+### V2 - Booking & CRM (Current)
+- **Appointment Booking** - Check availability, book, cancel, reschedule appointments
+- **Customer Recognition** - Identify returning customers, show visit history
+- **Lead Capture** - Capture sales inquiries with contact information
+- **Waitlist Management** - Add customers to waitlist when no slots available
+- **SMS Marketing** - Create and send SMS campaigns (mock implementation)
+- **FAQ Management** - CRUD operations for business FAQs
+- **Structured Chat Inputs** - Service selector, date/time picker, contact forms in widget
 
 ## Tech Stack
 
@@ -63,30 +73,60 @@ Admin panel at http://localhost:3000
 receptionist_ai/
 ├── backend/
 │   ├── app/
-│   │   ├── api/          # FastAPI routes
+│   │   ├── api/          # FastAPI routes (auth, chat, business, appointments, leads, customers, campaigns, faqs)
 │   │   ├── agent/        # Agno agent & prompts
-│   │   ├── tools/        # Agent tools
-│   │   ├── models/       # Pydantic models
-│   │   ├── services/     # Business logic
-│   │   └── db/           # Database
+│   │   ├── tools/        # Agent tools (booking, leads, customers)
+│   │   ├── models/       # Pydantic models (appointment, lead, customer, campaign)
+│   │   ├── services/     # Business logic (calendar service)
+│   │   └── db/           # Database (SQLite)
 │   └── data/
 │       └── templates/    # Industry YAML templates
 ├── frontend/
-│   ├── widget/           # Embeddable chat widget
-│   └── admin/            # React admin panel
+│   ├── widget/           # Embeddable chat widget with structured inputs
+│   └── admin/            # React admin panel (dashboard, appointments, customers, leads, waitlist, marketing)
 └── agentic_development_docs/
 ```
 
 ## API Endpoints
 
+### Authentication & Business
 - `POST /auth/signup` - Register user & business
 - `POST /auth/login` - Login
 - `GET /business/{id}` - Get business details
 - `PUT /business/{id}/config` - Update config (YAML)
+
+### Chat
 - `POST /chat/message` - Send chat message
 - `GET /chat/greeting/{id}` - Get greeting
+- `GET /chat/history/{business_id}/{session_id}` - Get chat history
+
+### Admin - Staff & Settings
 - `GET /admin/{id}/staff` - List staff
 - `POST /admin/{id}/staff` - Add staff
+
+### V2 - Appointments
+- `GET /admin/{id}/appointments` - List appointments
+- `POST /admin/{id}/appointments` - Create appointment
+- `PUT /admin/{id}/appointments/{appt_id}` - Update appointment
+- `DELETE /admin/{id}/appointments/{appt_id}` - Delete appointment
+
+### V2 - Customers
+- `GET /admin/{id}/customers` - List customers
+- `POST /admin/{id}/customers` - Create customer
+- `POST /admin/{id}/customers/import` - Import customers from CSV
+
+### V2 - Leads & Waitlist
+- `GET /admin/{id}/leads` - List leads
+- `POST /admin/{id}/leads` - Create lead
+- `GET /admin/{id}/waitlist` - List waitlist entries
+- `POST /admin/{id}/waitlist` - Add to waitlist
+
+### V2 - Campaigns & FAQs
+- `GET /admin/{id}/campaigns` - List SMS campaigns
+- `POST /admin/{id}/campaigns` - Create campaign
+- `POST /admin/{id}/campaigns/{campaign_id}/send` - Send campaign (mock)
+- `GET /admin/{id}/faqs` - List FAQs
+- `POST /admin/{id}/faqs` - Create FAQ
 
 ## Documentation
 
