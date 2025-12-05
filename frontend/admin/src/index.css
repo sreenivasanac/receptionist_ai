@@ -1,30 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: oklch(0.9818 0.0054 95.0986);
-  --foreground: oklch(0.3438 0.0269 95.7226);
-  --card: oklch(1.0000 0 0);
-  --card-foreground: oklch(0.1908 0.0020 106.5859);
-  --primary: oklch(0.6171 0.1375 39.0427);
-  --primary-foreground: oklch(1.0000 0 0);
-  --secondary: oklch(0.9245 0.0138 92.9892);
-  --secondary-foreground: oklch(0.4334 0.0177 98.6048);
-  --muted: oklch(0.9341 0.0153 90.2390);
-  --muted-foreground: oklch(0.6059 0.0075 97.4233);
-  --accent: oklch(0.9245 0.0138 92.9892);
-  --accent-foreground: oklch(0.2671 0.0196 98.9390);
-  --destructive: oklch(0.5500 0.2000 27.0000);
-  --destructive-foreground: oklch(1.0000 0 0);
-  --border: oklch(0.8847 0.0069 97.3627);
-  --input: oklch(0.9200 0.0100 95.0000);
-  --ring: oklch(0.6171 0.1375 39.0427);
-  --sidebar: oklch(0.9663 0.0080 98.8792);
-  --sidebar-foreground: oklch(0.3590 0.0051 106.6524);
-  --sidebar-primary: oklch(0.6171 0.1375 39.0427);
-  --sidebar-accent: oklch(0.9245 0.0138 92.9892);
-  --radius: 0.625rem;
+  /* Modern Tech/Product Startup Palette (Clean, Professional, Slight "AI" feel) */
+  /* Base: Cool Grays (Slate-like) */
+  --background: oklch(0.99 0.003 240); /* Very subtle cool white */
+  --foreground: oklch(0.20 0.03 265); /* Deep dark slate for text */
+  
+  /* Card: Pure White with subtle elevation */
+  --card: oklch(1.0 0 0);
+  --card-foreground: oklch(0.20 0.03 265);
+  
+  /* Primary: Deep Indigo/Violet (Trust + Tech) */
+  --primary: oklch(0.55 0.15 265); /* Indigo-ish */
+  --primary-foreground: oklch(0.98 0.01 265);
+  
+  /* Secondary: Subtle Gray/Blue */
+  --secondary: oklch(0.96 0.01 265);
+  --secondary-foreground: oklch(0.35 0.04 265);
+  
+  /* Muted: For secondary text and backgrounds */
+  --muted: oklch(0.96 0.01 265);
+  --muted-foreground: oklch(0.55 0.04 265);
+  
+  /* Accent: Soft highlight */
+  --accent: oklch(0.94 0.02 265);
+  --accent-foreground: oklch(0.20 0.03 265);
+  
+  /* Destructive: Refined Red */
+  --destructive: oklch(0.60 0.15 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  
+  /* Border: Crisp, subtle gray */
+  --border: oklch(0.92 0.01 265);
+  --input: oklch(0.92 0.01 265);
+  --ring: oklch(0.55 0.15 265); /* Matches primary */
+  
+  /* Sidebar: Slightly darker/distinct from main background or white */
+  --sidebar: oklch(0.985 0.005 240);
+  --sidebar-foreground: oklch(0.35 0.03 265);
+  --sidebar-primary: oklch(0.55 0.15 265);
+  --sidebar-accent: oklch(0.94 0.01 265);
+  
+  --radius: 0.75rem; /* Slightly more rounded for modern feel */
 }
 
 * {
@@ -32,7 +53,7 @@
 }
 
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background-color: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
@@ -47,65 +68,70 @@ body {
 
 @layer components {
   .btn-primary {
-    @apply px-5 py-2.5 font-medium transition-all duration-200;
+    @apply px-5 py-2.5 font-medium transition-all duration-200 flex items-center justify-center gap-2;
     background-color: var(--primary);
     color: var(--primary-foreground);
     border-radius: var(--radius);
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   }
   
   .btn-primary:hover {
-    filter: brightness(0.95);
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    filter: brightness(1.1);
+    box-shadow: 0 4px 12px -2px rgb(79 70 229 / 0.2); /* Colored shadow hint */
+    transform: translateY(-1px);
   }
   
   .btn-primary:active {
-    transform: translateY(1px);
+    transform: translateY(0);
   }
   
   .btn-secondary {
-    @apply px-5 py-2.5 font-medium transition-all duration-200;
+    @apply px-5 py-2.5 font-medium transition-all duration-200 flex items-center justify-center gap-2;
     background-color: var(--secondary);
     color: var(--secondary-foreground);
     border-radius: var(--radius);
+    border: 1px solid transparent;
   }
   
   .btn-secondary:hover {
-    filter: brightness(0.97);
+    background-color: oklch(0.94 0.01 265); /* Slightly darker */
   }
   
   .input-field {
-    @apply w-full px-4 py-2.5 transition-all duration-200 outline-none;
-    background-color: var(--input);
+    @apply w-full px-4 py-2.5 transition-all duration-200 outline-none font-normal;
+    background-color: var(--card); /* White background for inputs often looks cleaner */
     border: 1px solid var(--border);
     border-radius: var(--radius);
     color: var(--foreground);
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.02);
   }
   
   .input-field:focus {
     border-color: var(--primary);
-    box-shadow: 0 0 0 3px oklch(0.6171 0.1375 39.0427 / 0.15);
+    box-shadow: 0 0 0 3px oklch(0.55 0.15 265 / 0.15);
   }
   
   .input-field::placeholder {
     color: var(--muted-foreground);
+    opacity: 0.7;
   }
   
   .card {
     @apply p-6;
     background-color: var(--card);
     color: var(--card-foreground);
-    border-radius: calc(var(--radius) + 4px);
+    border-radius: var(--radius);
     border: 1px solid var(--border);
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.02), 0 1px 2px -1px rgb(0 0 0 / 0.02);
   }
   
   .card-hover {
-    @apply card transition-all duration-200;
+    @apply card transition-all duration-300 cursor-pointer;
   }
   
   .card-hover:hover {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
-    transform: translateY(-1px);
+    border-color: oklch(0.55 0.15 265 / 0.2);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -2px rgb(0 0 0 / 0.02);
+    transform: translateY(-2px);
   }
 }
