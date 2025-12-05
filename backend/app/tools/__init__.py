@@ -23,6 +23,14 @@ from .customers import (
     get_rebooking_suggestion
 )
 
+# V3 Tools
+from .recommendations import recommend_service
+from .workflows import (
+    check_workflow_triggers,
+    execute_workflow,
+    execute_triggered_workflows
+)
+
 __all__ = [
     # V1 Tools
     "get_business_hours",
@@ -45,4 +53,9 @@ __all__ = [
     "get_customer_history",
     "create_or_update_customer",
     "get_rebooking_suggestion",
+    # V3 Tools
+    "recommend_service",
+    "check_workflow_triggers",
+    "execute_workflow",
+    "execute_triggered_workflows",
 ]

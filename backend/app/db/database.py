@@ -229,4 +229,61 @@ def init_db():
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_business_phone ON customers(business_id, phone) WHERE phone IS NOT NULL")
         cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_customers_business_email ON customers(business_id, email) WHERE email IS NOT NULL")
         
+        # V3 Tables
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS workflows (
+                id TEXT PRIMARY KEY,
+                business_id TEXT NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT,
+                trigger_type TEXT NOT NULL CHECK (trigger_type IN ('keyword', 'segment', 'time')),
+                trigger_config TEXT DEFAULT '{}',
+                actions TEXT DEFAULT '[]',
+                is_active INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (business_id) REFERENCES businesses(id)
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS unanswered_questions (
+                id TEXT PRIMARY KEY,
+                business_id TEXT NOT NULL,
+                question_text TEXT NOT NULL,
+                category TEXT,
+                occurrence_count INTEGER DEFAULT 1,
+                last_asked_at TIMESTAMP,
+                suggested_answer TEXT,
+                is_resolved INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (business_id) REFERENCES businesses(id)
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS waitlist_notifications (
+                id TEXT PRIMARY KEY,
+                waitlist_id TEXT NOT NULL,
+                cancelled_appointment_id TEXT,
+                notification_sent_at TIMESTAMP,
+                response TEXT CHECK (response IN ('accepted', 'declined', 'expired', 'pending')),
+                response_at TIMESTAMP,
+                booking_created INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (waitlist_id) REFERENCES waitlist(id),
+                FOREIGN KEY (cancelled_appointment_id) REFERENCES appointments(id)
+            )
+        """)
+        
+        # Create indexes for V3 tables
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflows_business ON workflows(business_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_workflows_active ON workflows(is_active)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_unanswered_business ON unanswered_questions(business_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_unanswered_resolved ON unanswered_questions(is_resolved)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_waitlist_notifications_waitlist ON waitlist_notifications(waitlist_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_business ON conversations(business_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_conversations_session ON conversations(session_id)")
+        
         conn.commit()

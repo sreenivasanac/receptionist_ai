@@ -13,6 +13,10 @@ import Leads from './pages/Leads'
 import Customers from './pages/Customers'
 import Waitlist from './pages/Waitlist'
 import Marketing from './pages/Marketing'
+// V3 Pages
+import ConversationHistory from './pages/ConversationHistory'
+import Analytics from './pages/Analytics'
+import Workflows from './pages/Workflows'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -56,6 +60,10 @@ function AppRoutes() {
         <Route path="staff" element={<StaffManagement />} />
         <Route path="settings" element={<Settings />} />
         <Route path="demo" element={<ChatDemo />} />
+        {/* V3 Routes */}
+        <Route path="conversations" element={<ConversationHistory />} />
+        <Route path="analytics" element={<Analytics />} />
+        <Route path="workflows" element={<Workflows />} />
       </Route>
     </Routes>
   )

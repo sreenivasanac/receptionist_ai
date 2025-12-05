@@ -11,7 +11,7 @@ AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitne
 - **Industry Templates** - Pre-loaded configs for beauty, wellness, medical, fitness
 - **Conversation Context** - Session-based memory for natural conversations
 
-### V2 - Booking & CRM (Current)
+### V2 - Booking & CRM
 - **Appointment Booking** - Check availability, book, cancel, reschedule appointments
 - **Customer Recognition** - Identify returning customers, show visit history
 - **Lead Capture** - Capture sales inquiries with contact information
@@ -19,6 +19,14 @@ AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitne
 - **SMS Marketing** - Create and send SMS campaigns (mock implementation)
 - **FAQ Management** - CRUD operations for business FAQs
 - **Structured Chat Inputs** - Service selector, date/time picker, contact forms in widget
+
+### V3 - Intelligence & Polish (Current)
+- **Analytics Dashboard** - Leads, appointments, conversations, conversion rates
+- **Conversation History** - View, search, and export chat transcripts
+- **Custom Workflows** - Automate responses with keyword triggers, customer segments
+- **Service Recommendations** - AI suggests services based on customer goals/concerns
+- **Cancellation Recovery** - Automatic waitlist notifications when slots open up
+- **Workflow Templates** - Pre-built automations (birthday discount, bridal inquiry, etc.)
 
 ## Tech Stack
 
@@ -73,17 +81,18 @@ Admin panel at http://localhost:3000
 receptionist_ai/
 ├── backend/
 │   ├── app/
-│   │   ├── api/          # FastAPI routes (auth, chat, business, appointments, leads, customers, campaigns, faqs)
+│   │   ├── api/          # FastAPI routes (auth, chat, business, appointments, leads, analytics, workflows)
 │   │   ├── agent/        # Agno agent & prompts
-│   │   ├── tools/        # Agent tools (booking, leads, customers)
-│   │   ├── models/       # Pydantic models (appointment, lead, customer, campaign)
+│   │   ├── tools/        # Agent tools (booking, leads, customers, recommendations, workflows)
+│   │   ├── repositories/ # Data access layer (all database operations)
+│   │   ├── models/       # Pydantic models
 │   │   ├── services/     # Business logic (calendar service)
 │   │   └── db/           # Database (SQLite)
 │   └── data/
 │       └── templates/    # Industry YAML templates
 ├── frontend/
 │   ├── widget/           # Embeddable chat widget with structured inputs
-│   └── admin/            # React admin panel (dashboard, appointments, customers, leads, waitlist, marketing)
+│   └── admin/            # React admin panel (dashboard, analytics, conversations, workflows, appointments, etc.)
 └── agentic_development_docs/
 ```
 
@@ -127,6 +136,23 @@ receptionist_ai/
 - `POST /admin/{id}/campaigns/{campaign_id}/send` - Send campaign (mock)
 - `GET /admin/{id}/faqs` - List FAQs
 - `POST /admin/{id}/faqs` - Create FAQ
+
+### V3 - Analytics
+- `GET /analytics/overview/{id}` - Complete dashboard metrics
+- `GET /analytics/summary/{id}` - Summary stats
+- `GET /analytics/leads/{id}` - Lead statistics
+- `GET /analytics/appointments/{id}` - Appointment statistics
+
+### V3 - Conversations
+- `GET /conversations/{id}` - List/search conversations
+- `GET /conversations/{id}/{session_id}` - Get conversation details
+- `GET /conversations/{id}/{session_id}/export` - Export transcript
+
+### V3 - Workflows
+- `GET /workflows/{id}` - List workflows
+- `POST /workflows/{id}` - Create workflow
+- `GET /workflows/{id}/templates` - Get pre-built templates
+- `POST /workflows/{id}/{workflow_id}/toggle` - Enable/disable workflow
 
 ## Documentation
 
