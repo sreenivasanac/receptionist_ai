@@ -110,7 +110,7 @@ export default function Marketing() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-card-foreground">SMS Marketing</h1>
-          <p className="text-muted-foreground mt-1">Send SMS campaigns to your customers (mock)</p>
+          <p className="text-muted-foreground mt-1">Send campaigns from {business?.name || 'your business'}</p>
         </div>
         <button 
           onClick={() => setShowCreate(true)}
@@ -149,12 +149,12 @@ export default function Marketing() {
               message: `⭐ Thank you for being a loyal customer! Enjoy 20% off your next visit at ${business?.name || 'us'}. Use code VIP20.`
             },
             {
-              name: "Appointment Reminder",
-              message: `Hi! This is a reminder about your upcoming appointment at ${business?.name || 'us'}. We look forward to seeing you!`
-            },
-            {
               name: "Referral Program",
               message: `🎁 Love ${business?.name || 'us'}? Refer a friend and you both get $20 off! Share your unique code with friends.`
+            },
+            {
+              name: "Flash Sale",
+              message: `⚡ 48-HOUR FLASH SALE! Get 40% off all services at ${business?.name || 'us'}. Book now before it's gone!`
             },
           ].map((template) => (
             <button

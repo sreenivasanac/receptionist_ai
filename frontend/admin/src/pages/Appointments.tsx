@@ -91,7 +91,7 @@ export default function Appointments() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-card-foreground">Appointments</h1>
-          <p className="text-muted-foreground mt-1">Manage your scheduled appointments</p>
+          <p className="text-muted-foreground mt-1">{business.name}'s scheduled appointments</p>
         </div>
       </div>
 

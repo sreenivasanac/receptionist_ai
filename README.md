@@ -13,20 +13,21 @@ AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitne
 
 ### V2 - Booking & CRM
 - **Appointment Booking** - Check availability, book, cancel, reschedule appointments
+- **Interactive Booking UI** - Service picker, calendar selector, contact forms in chat widget
 - **Customer Recognition** - Identify returning customers, show visit history
 - **Lead Capture** - Capture sales inquiries with contact information
 - **Waitlist Management** - Add customers to waitlist when no slots available
-- **SMS Marketing** - Create and send SMS campaigns (mock implementation)
+- **SMS Marketing** - Create campaigns with pre-built templates (holiday, loyalty, referral)
 - **FAQ Management** - CRUD operations for business FAQs
-- **Structured Chat Inputs** - Service selector, date/time picker, contact forms in widget
+- **CSV Import** - Bulk import customers from CSV files
 
 ### V3 - Intelligence & Polish (Current)
-- **Analytics Dashboard** - Leads, appointments, conversations, conversion rates
-- **Conversation History** - View, search, and export chat transcripts
-- **Custom Workflows** - Automate responses with keyword triggers, customer segments
+- **Analytics Dashboard** - Leads, appointments, conversations, conversion rates with navigation
+- **Conversation History** - View, search, and export chat transcripts (JSON/CSV)
+- **Custom Workflows** - Automate responses with keyword triggers, customer segments. Pre-built automations (birthday, bridal, corporate, VIP, new customer)
 - **Service Recommendations** - AI suggests services based on customer goals/concerns
 - **Cancellation Recovery** - Automatic waitlist notifications when slots open up
-- **Workflow Templates** - Pre-built automations (birthday discount, bridal inquiry, etc.)
+- **Search & Filters** - Search appointments by customer name, filter by status/date
 
 ## Tech Stack
 

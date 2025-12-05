@@ -56,6 +56,7 @@ export default function BusinessSetup() {
   
   const [services, setServices] = useState<Array<{ id: string; name: string; duration_minutes: number; price: number; description: string }>>([])
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
+  const [newService, setNewService] = useState<{ id: string; name: string; duration_minutes: number; price: number; description: string } | null>(null)
   
   useEffect(() => {
     if (business?.id) {
@@ -145,15 +146,30 @@ export default function BusinessSetup() {
   }
   
   const handleAddService = () => {
-    const newService = {
+    setNewService({
       id: `service_${Date.now()}`,
-      name: 'New Service',
+      name: '',
       duration_minutes: 30,
       price: 0,
       description: '',
+    })
+  }
+  
+  const handleSaveNewService = () => {
+    if (newService && newService.name.trim()) {
+      setServices([...services, newService])
+      setNewService(null)
     }
-    setServices([...services, newService])
-    setEditingServiceId(newService.id)
+  }
+  
+  const handleCancelNewService = () => {
+    setNewService(null)
+  }
+  
+  const handleUpdateNewService = (field: string, value: string | number) => {
+    if (newService) {
+      setNewService({ ...newService, [field]: value })
+    }
   }
   
   const handleUpdateService = (id: string, field: string, value: string | number) => {
@@ -360,12 +376,88 @@ export default function BusinessSetup() {
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-card-foreground">Services</h2>
             <button
+              type="button"
               onClick={handleAddService}
-              className="px-3 py-1.5 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+              disabled={!!newService}
+              className="px-3 py-1.5 text-sm bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               + Add Service
             </button>
           </div>
+          
+          {/* New service form - shown at top */}
+          {newService && (
+            <div className="p-4 bg-primary/10 border border-primary/30 rounded-lg mb-3">
+              <p className="text-sm font-medium text-primary mb-3">New Service</p>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Service Name *</label>
+                    <input
+                      type="text"
+                      value={newService.name}
+                      onChange={(e) => handleUpdateNewService('name', e.target.value)}
+                      className="input-field"
+                      placeholder="e.g., Women's Haircut"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Description</label>
+                    <input
+                      type="text"
+                      value={newService.description}
+                      onChange={(e) => handleUpdateNewService('description', e.target.value)}
+                      className="input-field"
+                      placeholder="Brief description"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Duration (min)</label>
+                    <input
+                      type="number"
+                      value={newService.duration_minutes}
+                      onChange={(e) => handleUpdateNewService('duration_minutes', Number(e.target.value))}
+                      className="input-field"
+                      min="5"
+                      step="5"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">Price ($)</label>
+                    <input
+                      type="number"
+                      value={newService.price}
+                      onChange={(e) => handleUpdateNewService('price', Number(e.target.value))}
+                      className="input-field"
+                      min="0"
+                      step="0.01"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleSaveNewService}
+                    disabled={!newService.name.trim()}
+                    className="px-3 py-1.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50"
+                  >
+                    Add Service
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelNewService}
+                    className="px-3 py-1.5 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {services.length > 0 ? (
             <div className="space-y-3">
               {services.map((service) => (
@@ -455,7 +547,7 @@ export default function BusinessSetup() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : !newService && (
             <p className="text-muted-foreground">No services configured. Click "Add Service" to create your first service.</p>
           )}
         </div>

@@ -31,7 +31,9 @@ export default function Layout() {
       <aside className="w-64 bg-sidebar border-r border-border flex flex-col">
         <div className="p-6 border-b border-border">
           <h1 className="text-xl font-semibold text-primary">Keystone</h1>
-          <p className="text-sm text-muted-foreground">AI Receptionist</p>
+          <p className="text-sm text-muted-foreground truncate" title={business?.name}>
+            {business?.name || 'AI Receptionist'}
+          </p>
         </div>
         
         <nav className="flex-1 p-3 space-y-1">

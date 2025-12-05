@@ -35,7 +35,10 @@ class ReceptionistToolkits:
     
     @property
     def pending_input_type(self) -> Optional[str]:
-        """Get pending input type from any toolkit."""
+        """Get pending input type - customer form takes priority when set."""
+        # Customer form should take priority when collecting contact info
+        if self.customer.pending_input_type == "contact_form":
+            return self.customer.pending_input_type
         return (
             self.booking.pending_input_type or 
             self.customer.pending_input_type
@@ -43,7 +46,9 @@ class ReceptionistToolkits:
     
     @property
     def pending_input_config(self) -> Optional[dict]:
-        """Get pending input config from any toolkit."""
+        """Get pending input config - matches the input type priority."""
+        if self.customer.pending_input_type == "contact_form":
+            return self.customer.pending_input_config
         return (
             self.booking.pending_input_config or 
             self.customer.pending_input_config
