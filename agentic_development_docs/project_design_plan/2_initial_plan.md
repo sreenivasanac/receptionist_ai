@@ -49,7 +49,7 @@ AI Receptionist chatbot for self-care businesses (salons, medspas, fitness studi
 6. **Embed Code & Demo**
    - **Embed Script Tag:** Display `<script>` tag with business ID parameter
      ```html
-     <script src="https://widget.keystone.ai/chat.js" data-business-id="YOUR_BUSINESS_ID"></script>
+     <script src="https://widget.localkeystone.com/chat.js" data-business-id="YOUR_BUSINESS_ID"></script>
      ```
    - **Chatbot Demo Page:** Business owner can test the chatbot as a customer would see it
    - Preview widget with live business configuration
@@ -92,6 +92,59 @@ AI Receptionist chatbot for self-care businesses (salons, medspas, fitness studi
    - Parse YAML text into Python dict/object
    - Hold parsed config in session memory for agent tool access
    - Agent tools query this in-memory config (no repeated DB calls)
+
+5. **Example Business Config Structure (YAML):**
+   ```yaml
+   business_id: "salon_123"
+   name: "Luxe Salon"
+   location: "123 Main St, Denver CO"
+   
+   hours:
+     monday: { open: "09:00", close: "18:00" }
+     tuesday: { open: "09:00", close: "18:00" }
+     wednesday: { closed: true }
+     thursday: { open: "09:00", close: "18:00" }
+     friday: { open: "09:00", close: "18:00" }
+     saturday: { open: "10:00", close: "16:00" }
+     sunday: { closed: true }
+   
+   services:
+     - id: "haircut"
+       name: "Classic Haircut"
+       duration_minutes: 30
+       price: 45
+       description: "Professional haircut with styling"
+     - id: "color"
+       name: "Full Color"
+       duration_minutes: 120
+       price: 120
+       description: "Single-process color treatment"
+   
+   policies:
+     cancellation: "24 hours notice required"
+     deposit: true
+     deposit_amount: 50
+     walk_ins: "Welcome, appointments preferred"
+   
+   faqs:
+     - question: "Do you offer online booking?"
+       answer: "Yes, book at luxesalon.com or through this chat!"
+     - question: "What payment methods do you accept?"
+       answer: "Cash, all major credit cards, and Apple Pay."
+   ```
+
+6. **Granular Tool Functions (Alternative to single get_business_info):**
+   
+   The agent can access business config via these focused tools:
+   
+   | Tool | Parameters | Returns |
+   |------|------------|---------|
+   | `get_business_hours` | `business_id: str`, `day: str?` | Hours for specific day or all days |
+   | `get_service_details` | `business_id: str`, `service_id: str?` | Specific service or all services with pricing |
+   | `get_policies` | `business_id: str`, `policy_type: str?` | Relevant policies (cancellation, deposit, etc.) |
+   | `search_faqs` | `business_id: str`, `query: str` | Fuzzy search through FAQs, returns best matches |
+   
+   **Why granular tools?** Token efficiency — fetching only hours (~50 tokens) vs entire config (~500+ tokens) per query.
 
 ### V1 Tools
 

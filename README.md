@@ -1,57 +1,92 @@
-# AI Receptionist
+# AI Receptionist - Keystone
 
-AI-powered chatbot for self-care businesses (salons, medspas, fitness studios, clinics). Embeddable chat widget that handles customer queries, appointment booking, and lead capture.
+AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitness studios, clinics).
 
-## Target Industries
+## Features (V1 - Implemented)
 
-- **Beauty:** Hair salons, barber shops, nail salons, makeup artists, brow & lash studios
-- **Health & Wellness:** Medspas, wellness centers, chiropractic, massage, acupuncture
-- **Medical & Specialty:** Plastic surgery, dermatology, dental, IV therapy, weight loss clinics
-- **Fitness:** Boutique gyms, pilates, yoga, personal trainers, recovery studios
-
-## Features
-
-### Core (V1)
-- Business info queries (hours, pricing, services, location, policies, FAQs)
-- Embeddable chat widget with single `<script>` tag
-- Admin panel for business setup and configuration
-- Staff management
-- Conversation context retention
-
-### Booking & Lead Capture (V2)
-- Appointment scheduling with calendar UI
-- Lead capture and qualification
-- Returning customer recognition
-- Customer list management (CSV upload)
-- SMS marketing (mock)
-
-### Intelligence (V3)
-- AI service recommendations
-- Custom workflow builder (triggers + actions)
-- Analytics dashboard
-- Proactive follow-ups
-
-### Business Intelligence (V4)
-- Actionable insights (demand signals, scheduling optimization)
-- Unanswered questions report
-- Customer behavior analytics
-- Revenue insights
+- **Business Information Queries** - Hours, pricing, services, location, policies, FAQs
+- **Embeddable Chat Widget** - Single script tag to add to any website
+- **Admin Panel** - Configure business info, manage staff, preview chatbot
+- **Industry Templates** - Pre-loaded configs for beauty, wellness, medical, fitness
+- **Conversation Context** - Session-based memory for natural conversations
 
 ## Tech Stack
 
-- **Backend:** FastAPI + Agno AgentOS
-- **Database:** SQLite
-- **Frontend Widget:** Vanilla JS (embeddable)
+- **Backend**: Python 3.12+, FastAPI, Agno SDK, SQLite
+- **Frontend**: React + Tailwind (Admin), Vanilla JS (Widget)
+- **AI**: OpenAI GPT-4o-mini
+
+## Quick Start
+
+### 1. Backend Setup
+
+```bash
+cd backend
+
+# Install dependencies
+uv sync
+
+# Configure environment
+cp .env.example .env
+# Edit .env and add your OPENAI_API_KEY
+
+# Run server
+uv run python -m app.main
+```
+
+The API will be available at http://localhost:8000
+
+### 2. Admin Panel Setup
+
+```bash
+cd frontend/admin
+
+# Install dependencies
+pnpm install
+
+# Run dev server
+pnpm dev
+```
+
+Admin panel at http://localhost:3000
+
+### 3. Test the Widget
+
+1. Sign up via the admin panel (creates a business)
+2. Go to Settings to get your embed code
+3. Open `frontend/widget/index.html` in a browser
+4. Or add the embed code to any HTML page
 
 ## Project Structure
 
 ```
 receptionist_ai/
-├── agentic_development_docs/
-│   ├── business_plan/          # Business idea and target market
-│   └── project_design_plan/    # PRD and technical specs
-└── README.md
+├── backend/
+│   ├── app/
+│   │   ├── api/          # FastAPI routes
+│   │   ├── agent/        # Agno agent & prompts
+│   │   ├── tools/        # Agent tools
+│   │   ├── models/       # Pydantic models
+│   │   ├── services/     # Business logic
+│   │   └── db/           # Database
+│   └── data/
+│       └── templates/    # Industry YAML templates
+├── frontend/
+│   ├── widget/           # Embeddable chat widget
+│   └── admin/            # React admin panel
+└── agentic_development_docs/
 ```
+
+## API Endpoints
+
+- `POST /auth/signup` - Register user & business
+- `POST /auth/login` - Login
+- `GET /business/{id}` - Get business details
+- `PUT /business/{id}/config` - Update config (YAML)
+- `POST /chat/message` - Send chat message
+- `GET /chat/greeting/{id}` - Get greeting
+- `GET /admin/{id}/staff` - List staff
+- `POST /admin/{id}/staff` - Add staff
 
 ## Documentation
 
