@@ -1,306 +1,131 @@
 """Business configuration API endpoints."""
-import uuid
-import json
-from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Body
 import yaml
 
-from app.db.database import get_db_connection
-from app.models.business import Business, BusinessCreate, BusinessUpdate, BusinessConfig
+from app.repositories import business_repo, service_repo
+from app.models.business import Business, BusinessUpdate
 from app.api.chat import invalidate_agent_cache
 
 router = APIRouter(prefix="/business", tags=["Business"])
 
 
-def sync_services_to_db(business_id: str, config_yaml: str):
-    """Sync services from YAML config to the services database table."""
-    if not config_yaml:
-        return
-    
-    try:
-        config = yaml.safe_load(config_yaml)
-        services = config.get('services', [])
-    except yaml.YAMLError:
-        return
-    
-    if not services:
-        return
-    
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        now = datetime.now().isoformat()
-        
-        # Get existing service IDs for this business
-        cursor.execute("SELECT id FROM services WHERE business_id = ?", (business_id,))
-        existing_ids = {row['id'] for row in cursor.fetchall()}
-        
-        new_ids = set()
-        for service in services:
-            service_id = service.get('id')
-            if not service_id:
-                continue
-            
-            new_ids.add(service_id)
-            
-            if service_id in existing_ids:
-                # Update existing service
-                cursor.execute("""
-                    UPDATE services 
-                    SET name = ?, description = ?, price = ?, duration_minutes = ?, 
-                        is_active = ?, updated_at = ?
-                    WHERE id = ? AND business_id = ?
-                """, (
-                    service.get('name', ''),
-                    service.get('description', ''),
-                    service.get('price', 0),
-                    service.get('duration_minutes', 60),
-                    1,  # is_active
-                    now,
-                    service_id,
-                    business_id
-                ))
-            else:
-                # Insert new service
-                cursor.execute("""
-                    INSERT INTO services (id, business_id, name, description, price, 
-                                         duration_minutes, is_active, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """, (
-                    service_id,
-                    business_id,
-                    service.get('name', ''),
-                    service.get('description', ''),
-                    service.get('price', 0),
-                    service.get('duration_minutes', 60),
-                    1,  # is_active
-                    now,
-                    now
-                ))
-        
-        # Mark removed services as inactive (don't delete to preserve history)
-        removed_ids = existing_ids - new_ids
-        if removed_ids:
-            placeholders = ','.join(['?' for _ in removed_ids])
-            cursor.execute(f"""
-                UPDATE services SET is_active = 0, updated_at = ?
-                WHERE business_id = ? AND id IN ({placeholders})
-            """, [now, business_id] + list(removed_ids))
-        
-        conn.commit()
-
-
 @router.get("/{business_id}", response_model=Business)
 async def get_business(business_id: str):
     """Get business by ID."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM businesses WHERE id = ?", (business_id,))
-        biz = cursor.fetchone()
-        
-        if not biz:
-            raise HTTPException(status_code=404, detail="Business not found")
-        
-        return Business(
-            id=biz["id"],
-            name=biz["name"],
-            type=biz["type"],
-            address=biz["address"],
-            phone=biz["phone"],
-            email=biz["email"],
-            website=biz["website"],
-            config_yaml=biz["config_yaml"],
-            features_enabled=json.loads(biz["features_enabled"] or "{}"),
-            created_at=biz["created_at"],
-            updated_at=biz["updated_at"]
-        )
+    business = business_repo.find_by_id(business_id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    return business
 
 
 @router.put("/{business_id}", response_model=Business)
 async def update_business(business_id: str, update: BusinessUpdate):
     """Update business details."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT * FROM businesses WHERE id = ?", (business_id,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Business not found")
-        
-        updates = []
-        values = []
-        
-        if update.name is not None:
-            updates.append("name = ?")
-            values.append(update.name)
-        if update.address is not None:
-            updates.append("address = ?")
-            values.append(update.address)
-        if update.phone is not None:
-            updates.append("phone = ?")
-            values.append(update.phone)
-        if update.email is not None:
-            updates.append("email = ?")
-            values.append(update.email)
-        if update.website is not None:
-            updates.append("website = ?")
-            values.append(update.website)
-        if update.config_yaml is not None:
-            updates.append("config_yaml = ?")
-            values.append(update.config_yaml)
-        if update.features_enabled is not None:
-            updates.append("features_enabled = ?")
-            values.append(json.dumps(update.features_enabled))
-        
-        if updates:
-            updates.append("updated_at = ?")
-            values.append(datetime.now().isoformat())
-            values.append(business_id)
-            
-            cursor.execute(
-                f"UPDATE businesses SET {', '.join(updates)} WHERE id = ?",
-                values
-            )
-            conn.commit()
-            
-            # If config_yaml was updated, sync services and invalidate agent cache
-            if update.config_yaml is not None:
-                sync_services_to_db(business_id, update.config_yaml)
-                invalidate_agent_cache(business_id)
-        
-        return await get_business(business_id)
+    if not business_repo.exists(business_id):
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    business = business_repo.update(business_id, update)
+    
+    if update.config_yaml is not None:
+        try:
+            config = yaml.safe_load(update.config_yaml)
+            services = config.get('services', [])
+            service_repo.sync_from_config(business_id, services)
+        except yaml.YAMLError:
+            pass
+        invalidate_agent_cache(business_id)
+    
+    return business
 
 
 @router.get("/{business_id}/config", response_model=dict)
 async def get_business_config(business_id: str):
     """Get parsed business configuration."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT config_yaml FROM businesses WHERE id = ?", (business_id,))
-        biz = cursor.fetchone()
-        
-        if not biz:
+    config = business_repo.get_config(business_id)
+    
+    if config is None:
+        config_yaml = business_repo.get_config_yaml(business_id)
+        if config_yaml is None:
             raise HTTPException(status_code=404, detail="Business not found")
-        
-        config_yaml = biz["config_yaml"]
-        if not config_yaml:
-            return {"config": {}, "message": "No configuration set"}
-        
-        try:
-            config = yaml.safe_load(config_yaml)
-            return {"config": config}
-        except yaml.YAMLError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid YAML configuration: {e}")
+        return {"config": {}, "message": "No configuration set"}
+    
+    return {"config": config}
 
 
 @router.put("/{business_id}/config", response_model=dict)
 async def update_business_config(business_id: str, config: dict = Body(...)):
     """Update business configuration from parsed dict (converts to YAML)."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT id FROM businesses WHERE id = ?", (business_id,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Business not found")
-        
-        try:
-            config_yaml = yaml.dump(config, default_flow_style=False)
-        except yaml.YAMLError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid configuration: {e}")
-        
-        cursor.execute("""
-            UPDATE businesses 
-            SET config_yaml = ?, updated_at = ?
-            WHERE id = ?
-        """, (config_yaml, datetime.now().isoformat(), business_id))
-        conn.commit()
-        
-        # Sync services to DB and invalidate agent cache
-        sync_services_to_db(business_id, config_yaml)
-        invalidate_agent_cache(business_id)
-        
-        return {"message": "Configuration updated", "config": config}
+    if not business_repo.exists(business_id):
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    try:
+        config_yaml = yaml.dump(config, default_flow_style=False)
+    except yaml.YAMLError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid configuration: {e}")
+    
+    business_repo.update_config_yaml(business_id, config_yaml)
+    
+    services = config.get('services', [])
+    service_repo.sync_from_config(business_id, services)
+    invalidate_agent_cache(business_id)
+    
+    return {"message": "Configuration updated", "config": config}
 
 
 @router.put("/{business_id}/config/yaml", response_model=dict)
 async def update_business_config_yaml(business_id: str, yaml_content: str = Body(...)):
     """Update business configuration from raw YAML string."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT id FROM businesses WHERE id = ?", (business_id,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Business not found")
-        
-        try:
-            yaml.safe_load(yaml_content)
-        except yaml.YAMLError as e:
-            raise HTTPException(status_code=400, detail=f"Invalid YAML: {e}")
-        
-        cursor.execute("""
-            UPDATE businesses 
-            SET config_yaml = ?, updated_at = ?
-            WHERE id = ?
-        """, (yaml_content, datetime.now().isoformat(), business_id))
-        conn.commit()
-        
-        # Sync services to DB and invalidate agent cache
-        sync_services_to_db(business_id, yaml_content)
-        invalidate_agent_cache(business_id)
-        
-        return {"message": "Configuration updated"}
+    if not business_repo.exists(business_id):
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    try:
+        config = yaml.safe_load(yaml_content)
+    except yaml.YAMLError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid YAML: {e}")
+    
+    business_repo.update_config_yaml(business_id, yaml_content)
+    
+    services = config.get('services', []) if config else []
+    service_repo.sync_from_config(business_id, services)
+    invalidate_agent_cache(business_id)
+    
+    return {"message": "Configuration updated"}
 
 
 @router.get("/{business_id}/features", response_model=dict)
 async def get_features(business_id: str):
     """Get enabled features for a business."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT features_enabled FROM businesses WHERE id = ?", (business_id,))
-        biz = cursor.fetchone()
-        
-        if not biz:
-            raise HTTPException(status_code=404, detail="Business not found")
-        
-        return {"features": json.loads(biz["features_enabled"] or "{}")}
+    if not business_repo.exists(business_id):
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    features = business_repo.get_features(business_id)
+    return {"features": features}
 
 
 @router.put("/{business_id}/features", response_model=dict)
 async def update_features(business_id: str, features: dict = Body(...)):
     """Update enabled features for a business."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT id FROM businesses WHERE id = ?", (business_id,))
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Business not found")
-        
-        cursor.execute("""
-            UPDATE businesses 
-            SET features_enabled = ?, updated_at = ?
-            WHERE id = ?
-        """, (json.dumps(features), datetime.now().isoformat(), business_id))
-        conn.commit()
-        
-        return {"message": "Features updated", "features": features}
+    if not business_repo.exists(business_id):
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    business_repo.update_features(business_id, features)
+    return {"message": "Features updated", "features": features}
 
 
 @router.get("/{business_id}/embed-code", response_model=dict)
 async def get_embed_code(business_id: str, base_url: Optional[str] = Query(default="https://widget.localkeystone.com")):
     """Get the embed code for the chat widget."""
-    with get_db_connection() as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, name FROM businesses WHERE id = ?", (business_id,))
-        biz = cursor.fetchone()
-        
-        if not biz:
-            raise HTTPException(status_code=404, detail="Business not found")
-        
-        embed_code = f'''<script src="{base_url}/chat.js" data-business-id="{business_id}"></script>'''
-        
-        return {
-            "business_id": business_id,
-            "business_name": biz["name"],
-            "embed_code": embed_code,
-            "instructions": "Add this script tag to your website's HTML, preferably before the closing </body> tag."
-        }
+    business = business_repo.find_by_id(business_id)
+    if not business:
+        raise HTTPException(status_code=404, detail="Business not found")
+    
+    embed_code = f'''<script src="{base_url}/chat.js" data-business-id="{business_id}"></script>'''
+    
+    return {
+        "business_id": business_id,
+        "business_name": business.name,
+        "embed_code": embed_code,
+        "instructions": "Add this script tag to your website's HTML, preferably before the closing </body> tag."
+    }

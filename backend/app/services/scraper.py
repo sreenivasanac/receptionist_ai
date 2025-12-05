@@ -3,7 +3,6 @@ import re
 import json
 import uuid
 from datetime import datetime
-from typing import Optional
 from urllib.parse import urlparse, urljoin
 
 import httpx
@@ -13,16 +12,7 @@ from app.db.database import get_db_connection
 
 
 async def scrape_website(url: str, timeout: int = 30) -> dict:
-    """
-    Scrape a website and extract its content.
-    
-    Args:
-        url: The URL to scrape
-        timeout: Request timeout in seconds
-        
-    Returns:
-        Dict with raw_content and parsed elements
-    """
+    """Scrape a website and extract its content."""
     headers = {
         "User-Agent": "Mozilla/5.0 (compatible; KeystoneBot/1.0; +https://www.localkeystone.com)"
     }
@@ -100,15 +90,7 @@ async def scrape_website(url: str, timeout: int = 30) -> dict:
 
 
 def parse_business_info(scraped_data: dict) -> dict:
-    """
-    Parse scraped data into structured business information.
-    
-    Args:
-        scraped_data: The scraped website data
-        
-    Returns:
-        Structured business info dict
-    """
+    """Parse scraped data into structured business information."""
     parsed = scraped_data.get("parsed_data", {})
     
     info = {
