@@ -218,6 +218,20 @@ def create_receptionist_agent(
     @tool
     def get_services_tool(service_name: Optional[str] = None) -> str:
         """Get information about services offered. Optionally search by service name."""
+        # If searching for a specific service, just return text info
+        if service_name:
+            return toolkit.get_services(service_name)
+        
+        # If listing all services, show the structured service selector UI
+        services_list = toolkit.get_services_list()
+        if services_list:
+            toolkit.pending_input_type = "service_select"
+            toolkit.pending_input_config = {
+                "services": services_list,
+                "multi_select": False
+            }
+            return "Here are our services. Select one to learn more or book an appointment:"
+        
         return toolkit.get_services(service_name)
     
     @tool
@@ -251,39 +265,44 @@ def create_receptionist_agent(
         Call this when a customer wants to book an appointment.
         Returns available services so customer can choose.
         """
-        services_text = toolkit.get_services()
         services_list = toolkit.get_services_list()
         
-        # Set up structured service selection input
+        # Set up structured service selection input - don't list services in text
         toolkit.pending_input_type = "service_select"
         toolkit.pending_input_config = {
             "services": services_list,
             "multi_select": False
         }
         
-        return f"Here are our available services:\n\n{services_text}\n\nWhich service would you like to book?"
+        return "Great! Please select a service from the options below:"
     
     # ============ V2 Tools ============
     
     @tool
-    def check_availability_tool(service_id: str, date_range: str, time_preference: Optional[str] = None, staff_id: Optional[str] = None) -> str:
+    def check_availability_tool(service_id: Optional[str] = None, date_range: str = "this week", time_preference: Optional[str] = None, staff_id: Optional[str] = None) -> str:
         """
         Check available appointment slots for a service.
         
         Args:
-            service_id: ID of the service to book (e.g., 'haircut_women', 'massage')
-            date_range: When to look for slots (e.g., 'this week', 'tomorrow', 'next week')
+            service_id: ID of the service to book (e.g., 'womens_haircut', 'mens_haircut'). Optional - uses previously selected service if not provided.
+            date_range: When to look for slots (e.g., 'this week', 'tomorrow', 'next week'). Defaults to 'this week'.
             time_preference: Preferred time (e.g., 'morning', 'afternoon', 'after 5pm')
             staff_id: Optional specific staff member ID
         
         Returns available time slots that can be presented to the customer.
+        IMPORTANT: Call this immediately after customer selects a service - the service_id is already tracked.
         """
         if not toolkit.business_id:
             return "Booking is not available at this time."
         
+        # Use stored service_id if not provided
+        actual_service_id = service_id or toolkit.selected_service_id
+        if not actual_service_id:
+            return "Please select a service first before checking availability."
+        
         result = booking_check_availability(
             business_id=toolkit.business_id,
-            service_id=service_id,
+            service_id=actual_service_id,
             date_range=date_range,
             time_preference=time_preference,
             staff_id=staff_id,
@@ -298,24 +317,22 @@ def create_receptionist_agent(
             return f"I'm sorry, there are no available slots for {result.get('service_name', 'this service')} during {date_range}. Would you like to try a different time or be added to our waitlist?"
         
         # Store service for booking
-        toolkit.selected_service_id = service_id
+        toolkit.selected_service_id = actual_service_id
         
-        # Set up calendar UI - pass all slots for 2 months
+        # Set up calendar UI with all available slots
         toolkit.pending_input_type = "datetime_picker"
         toolkit.pending_input_config = {
             "min_date": result['calendar_ui_data'].get('min_date'),
             "max_date": result['calendar_ui_data'].get('max_date'),
             "available_dates": result['calendar_ui_data'].get('available_dates', []),
             "time_slots": result['calendar_ui_data'].get('time_slots', []),
-            "slots": slots  # All slots for 2 months
+            "slots": slots
         }
         
-        # Format a few slots for display in message
-        slot_list = []
-        for i, slot in enumerate(slots[:5]):
-            slot_list.append(f"- {slot['date']} at {slot['time']}" + (f" with {slot['staff_name']}" if slot.get('staff_name') else ""))
-        
-        return f"Here are the available times for {result.get('service_name', 'your appointment')}:\n\n" + "\n".join(slot_list) + "\n\nWhich time works best for you?"
+        # Don't list specific times in text - let the datetime picker UI show them
+        # This prevents mismatch between AI text and actual available slots
+        service_name = result.get('service_name', 'your appointment')
+        return f"I found {len(slots)} available time slots for {service_name}. Please select your preferred date and time from the calendar below."
     
     @tool
     def book_appointment_tool(customer_name: str, customer_phone: str, slot_id: Optional[str] = None, customer_email: Optional[str] = None) -> str:

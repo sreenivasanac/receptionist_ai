@@ -150,6 +150,55 @@ export default function Workflows() {
         </button>
       </div>
 
+      {/* What You Can Do Section */}
+      <div className="card mb-6 bg-gradient-to-r from-primary/5 to-blue-500/5 border-primary/20">
+        <h2 className="text-lg font-medium text-card-foreground mb-3">What You Can Automate</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="flex items-start gap-2">
+            <span className="text-primary mt-0.5">🎂</span>
+            <div>
+              <p className="font-medium text-card-foreground">Birthday Discounts</p>
+              <p className="text-muted-foreground">Auto-offer 20% off when customers mention their birthday</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-primary mt-0.5">💒</span>
+            <div>
+              <p className="font-medium text-card-foreground">Bridal Inquiries</p>
+              <p className="text-muted-foreground">Capture wedding leads and route to your bridal specialist</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-primary mt-0.5">🏢</span>
+            <div>
+              <p className="font-medium text-card-foreground">Corporate Packages</p>
+              <p className="text-muted-foreground">Automatically capture B2B leads for group bookings</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-primary mt-0.5">⭐</span>
+            <div>
+              <p className="font-medium text-card-foreground">VIP Recognition</p>
+              <p className="text-muted-foreground">Special messages for customers with 5+ visits</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-primary mt-0.5">🆕</span>
+            <div>
+              <p className="font-medium text-card-foreground">New Customer Welcome</p>
+              <p className="text-muted-foreground">Offer first-visit discounts to new customers</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="text-primary mt-0.5">💳</span>
+            <div>
+              <p className="font-medium text-card-foreground">Membership Inquiries</p>
+              <p className="text-muted-foreground">Capture leads when customers ask about packages</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -162,6 +211,7 @@ export default function Workflows() {
             {workflows.length === 0 ? (
               <div className="card text-center py-8">
                 <p className="text-muted-foreground mb-4">No workflows configured yet</p>
+                <p className="text-sm text-muted-foreground mb-4">Workflows automatically respond to customer messages with special offers, lead capture, and more.</p>
                 <button
                   onClick={() => setShowCreateModal(true)}
                   className="btn btn-secondary"

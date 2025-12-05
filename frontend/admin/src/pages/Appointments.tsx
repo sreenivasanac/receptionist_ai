@@ -31,6 +31,7 @@ export default function Appointments() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('')
   const [dateFilter, setDateFilter] = useState<string>('')
+  const [searchName, setSearchName] = useState<string>('')
 
   useEffect(() => {
     if (business?.id) {
@@ -94,7 +95,20 @@ export default function Appointments() {
         </div>
       </div>
 
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-wrap gap-4 mb-6">
+        <div className="relative">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search by name..."
+            value={searchName}
+            onChange={(e) => setSearchName(e.target.value)}
+            className="input pl-9 w-48"
+          />
+        </div>
+        
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
@@ -115,9 +129,9 @@ export default function Appointments() {
           className="input w-48"
         />
         
-        {(filter || dateFilter) && (
+        {(filter || dateFilter || searchName) && (
           <button
-            onClick={() => { setFilter(''); setDateFilter('') }}
+            onClick={() => { setFilter(''); setDateFilter(''); setSearchName('') }}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
             Clear filters
@@ -129,7 +143,9 @@ export default function Appointments() {
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      ) : appointments.length === 0 ? (
+      ) : appointments.filter(apt => 
+          !searchName || apt.customer_name.toLowerCase().includes(searchName.toLowerCase())
+        ).length === 0 ? (
         <div className="card text-center py-12">
           <svg className="w-16 h-16 mx-auto text-muted-foreground mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -151,7 +167,9 @@ export default function Appointments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {appointments.map((apt) => (
+              {appointments.filter(apt => 
+                !searchName || apt.customer_name.toLowerCase().includes(searchName.toLowerCase())
+              ).map((apt) => (
                 <tr key={apt.id} className="hover:bg-muted/30">
                   <td className="p-4">
                     <div className="font-medium text-card-foreground">{apt.customer_name}</div>

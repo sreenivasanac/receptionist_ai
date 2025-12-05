@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { api } from '../services/api'
 
@@ -91,12 +92,13 @@ export default function Analytics() {
     )
   }
 
-  const StatCard = ({ title, value, subtitle, trend, color = 'primary' }: {
+  const StatCard = ({ title, value, subtitle, trend, color = 'primary', linkTo }: {
     title: string
     value: string | number
     subtitle?: string
     trend?: string
     color?: 'primary' | 'green' | 'blue' | 'purple'
+    linkTo?: string
   }) => {
     const colors = {
       primary: 'bg-primary/10 text-primary',
@@ -105,21 +107,34 @@ export default function Analytics() {
       purple: 'bg-purple-500/10 text-purple-600'
     }
     
-    return (
-      <div className="card">
-        <div className="flex items-center gap-4">
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colors[color]}`}>
-            <span className="text-xl font-bold">{typeof value === 'number' ? value : '#'}</span>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-semibold text-card-foreground">{value}</p>
-            {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
-            {trend && <p className="text-xs text-green-600">{trend}</p>}
-          </div>
+    const content = (
+      <div className="flex items-center gap-4">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${colors[color]}`}>
+          <span className="text-xl font-bold">{typeof value === 'number' ? value : '#'}</span>
         </div>
+        <div className="flex-1">
+          <p className="text-sm text-muted-foreground">{title}</p>
+          <p className="text-2xl font-semibold text-card-foreground">{value}</p>
+          {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+          {trend && <p className="text-xs text-green-600">{trend}</p>}
+        </div>
+        {linkTo && (
+          <svg className="w-5 h-5 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        )}
       </div>
     )
+    
+    if (linkTo) {
+      return (
+        <Link to={linkTo} className="card hover:border-primary transition-colors cursor-pointer">
+          {content}
+        </Link>
+      )
+    }
+    
+    return <div className="card">{content}</div>
   }
 
   return (
@@ -152,30 +167,36 @@ export default function Analytics() {
               value={data.summary.total_conversations}
               subtitle={`${data.summary.conversations_this_period} this period`}
               color="primary"
+              linkTo="/conversations"
             />
             <StatCard
               title="Total Leads"
               value={data.summary.total_leads}
               subtitle={`${data.summary.leads_this_period} this period`}
               color="blue"
+              linkTo="/leads"
             />
             <StatCard
               title="Appointments"
               value={data.summary.total_appointments}
               subtitle={`${data.summary.appointments_this_period} this period`}
               color="green"
+              linkTo="/appointments"
             />
             <StatCard
               title="Conversion Rate"
-              value={`${data.summary.conversion_rate}%`}
-              subtitle="Leads to customers"
+              value={`${data.leads.conversion_rate || data.summary.conversion_rate}%`}
+              subtitle={`${data.leads.by_status?.converted || 0} converted of ${data.leads.total || data.summary.total_leads} leads`}
               color="purple"
             />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <div className="card">
-              <h2 className="text-lg font-medium text-card-foreground mb-4">Lead Status</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium text-card-foreground">Lead Status</h2>
+                <Link to="/leads" className="text-sm text-primary hover:underline">View All</Link>
+              </div>
               <div className="space-y-3">
                 {Object.entries(data.leads.by_status).map(([status, count]) => (
                   <div key={status} className="flex items-center justify-between">
@@ -198,7 +219,10 @@ export default function Analytics() {
             </div>
 
             <div className="card">
-              <h2 className="text-lg font-medium text-card-foreground mb-4">Appointment Status</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium text-card-foreground">Appointment Status</h2>
+                <Link to="/appointments" className="text-sm text-primary hover:underline">View All</Link>
+              </div>
               <div className="space-y-3">
                 {Object.entries(data.appointments.by_status).map(([status, count]) => (
                   <div key={status} className="flex items-center justify-between">
@@ -271,7 +295,10 @@ export default function Analytics() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="card">
-              <h2 className="text-lg font-medium text-card-foreground mb-4">Conversation Metrics</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium text-card-foreground">Conversation Metrics</h2>
+                <Link to="/conversations" className="text-sm text-primary hover:underline">View All</Link>
+              </div>
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Total Conversations</span>
@@ -285,7 +312,10 @@ export default function Analytics() {
             </div>
 
             <div className="card">
-              <h2 className="text-lg font-medium text-card-foreground mb-4">Waitlist</h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-medium text-card-foreground">Waitlist</h2>
+                <Link to="/waitlist" className="text-sm text-primary hover:underline">View All</Link>
+              </div>
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Currently Waiting</span>

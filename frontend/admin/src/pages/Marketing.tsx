@@ -126,6 +126,52 @@ export default function Marketing() {
         </p>
       </div>
 
+      {/* Example Templates */}
+      <div className="card mb-6">
+        <h3 className="text-lg font-medium text-card-foreground mb-3">SMS Templates</h3>
+        <p className="text-sm text-muted-foreground mb-4">Click any template to use it as a starting point</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {[
+            {
+              name: "Holiday Special",
+              message: `🎄 Happy Holidays from ${business?.name || 'us'}! Treat yourself with 30% off any service. Use code HOLIDAY30. Book now: [link]`
+            },
+            {
+              name: "New Year Promo",
+              message: `✨ New Year, New You! Start 2025 right with 25% off. Book your appointment at ${business?.name || 'us'} today!`
+            },
+            {
+              name: "Valentine's Special",
+              message: `💕 Treat yourself this Valentine's! Get a free upgrade on any service at ${business?.name || 'us'}. Limited time only!`
+            },
+            {
+              name: "Loyalty Reward",
+              message: `⭐ Thank you for being a loyal customer! Enjoy 20% off your next visit at ${business?.name || 'us'}. Use code VIP20.`
+            },
+            {
+              name: "Appointment Reminder",
+              message: `Hi! This is a reminder about your upcoming appointment at ${business?.name || 'us'}. We look forward to seeing you!`
+            },
+            {
+              name: "Referral Program",
+              message: `🎁 Love ${business?.name || 'us'}? Refer a friend and you both get $20 off! Share your unique code with friends.`
+            },
+          ].map((template) => (
+            <button
+              key={template.name}
+              onClick={() => {
+                setNewCampaign({ ...newCampaign, name: template.name, message: template.message })
+                setShowCreate(true)
+              }}
+              className="text-left p-3 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-colors"
+            >
+              <p className="font-medium text-card-foreground text-sm">{template.name}</p>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{template.message}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {showCreate && (
         <div className="card mb-6">
           <h3 className="text-lg font-medium text-card-foreground mb-4">Create Campaign</h3>

@@ -117,7 +117,11 @@ export default function Customers() {
           <h1 className="text-2xl font-semibold text-card-foreground">Customers</h1>
           <p className="text-muted-foreground mt-1">{totalCount} total customers</p>
         </div>
-        <div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <p className="text-xs text-muted-foreground">CSV format:</p>
+            <p className="text-xs font-mono text-muted-foreground">first_name, last_name, email, mobile_number</p>
+          </div>
           <input
             type="file"
             ref={fileInputRef}
@@ -164,10 +168,6 @@ export default function Customers() {
           onChange={(e) => setSearch(e.target.value)}
           className="input w-80"
         />
-      </div>
-
-      <div className="text-sm text-muted-foreground mb-4">
-        CSV format: first_name, last_name, email, mobile_number
       </div>
 
       {loading ? (

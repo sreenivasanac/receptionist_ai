@@ -60,6 +60,16 @@ def extract_slot_id(message: str) -> tuple[str, str | None]:
     return message, None
 
 
+def extract_service_id(message: str) -> tuple[str, str | None]:
+    """Extract service_id from message if present. Returns (clean_message, service_id)."""
+    match = re.search(r'\[service_id:([^\]]+)\]', message)
+    if match:
+        service_id = match.group(1)
+        clean_message = re.sub(r'\s*\[service_id:[^\]]+\]', '', message)
+        return clean_message, service_id
+    return message, None
+
+
 @router.post("/message", response_model=ChatResponse)
 async def send_message(request: ChatRequest):
     """Send a message to the AI receptionist and get a response."""
@@ -75,9 +85,19 @@ async def send_message(request: ChatRequest):
                 toolkit.customer_info[field] = value
                 conversation["customer_info"][field] = value
     
+    # Extract slot_id if present
     message_text, slot_id = extract_slot_id(request.message)
     if slot_id:
         toolkit.selected_slot_id = slot_id
+    
+    # Extract service_id if present (from structured service selection)
+    message_text, service_id = extract_service_id(message_text)
+    if service_id:
+        toolkit.selected_service_id = service_id
+        # Clear any pending service_select UI since service is now selected
+        if toolkit.pending_input_type == "service_select":
+            toolkit.pending_input_type = None
+            toolkit.pending_input_config = None
     
     conversation["messages"].append({
         "role": "user",
