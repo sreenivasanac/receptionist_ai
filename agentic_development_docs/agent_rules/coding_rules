@@ -1,0 +1,9 @@
+- The documentation for Agno, the agentic development framework is given here:
+    - https://docs.agno.com/llms.txt
+    - https://docs.agno.com/llms-full.txt
+    
+- The documentation for LiteLLM (developed by BerriAI) - you can get using Context7 MCP server, or using web search tool, this is the link:
+    - https://docs.litellm.ai/llms-full.txt
+    - https://docs.litellm.ai/llms.txt
+
+- Use Perplexity MCP server to do research in the web when necessary.
