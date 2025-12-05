@@ -1,0 +1,86 @@
+# Health & Wellness Vertical Template - Medspas, Wellness Centers, Chiropractic, Massage, Acupuncture
+name: ""
+location: ""
+phone: ""
+email: ""
+
+hours:
+  monday: { open: "09:00", close: "18:00" }
+  tuesday: { open: "09:00", close: "18:00" }
+  wednesday: { open: "09:00", close: "18:00" }
+  thursday: { open: "09:00", close: "19:00" }
+  friday: { open: "09:00", close: "18:00" }
+  saturday: { open: "10:00", close: "16:00" }
+  sunday: { closed: true }
+
+services:
+  - id: "massage_swedish"
+    name: "Swedish Massage"
+    duration_minutes: 60
+    price: 90
+    description: "Relaxing full-body massage using long, flowing strokes"
+  - id: "massage_deep_tissue"
+    name: "Deep Tissue Massage"
+    duration_minutes: 60
+    price: 110
+    description: "Therapeutic massage targeting deep muscle layers"
+  - id: "massage_hot_stone"
+    name: "Hot Stone Massage"
+    duration_minutes: 75
+    price: 130
+    description: "Soothing massage with heated basalt stones"
+  - id: "facial_classic"
+    name: "Classic Facial"
+    duration_minutes: 60
+    price: 85
+    description: "Deep cleansing facial with extraction and mask"
+  - id: "facial_hydrating"
+    name: "Hydrating Facial"
+    duration_minutes: 75
+    price: 110
+    description: "Intensive moisture treatment for dry skin"
+  - id: "botox"
+    name: "Botox Treatment"
+    duration_minutes: 30
+    price: 350
+    description: "Injectable treatment for wrinkles and fine lines"
+  - id: "filler_lips"
+    name: "Lip Filler"
+    duration_minutes: 45
+    price: 500
+    description: "Hyaluronic acid filler for lip enhancement"
+  - id: "chiro_adjustment"
+    name: "Chiropractic Adjustment"
+    duration_minutes: 30
+    price: 75
+    description: "Spinal adjustment and alignment"
+  - id: "acupuncture"
+    name: "Acupuncture Session"
+    duration_minutes: 60
+    price: 95
+    description: "Traditional Chinese acupuncture treatment"
+  - id: "consultation"
+    name: "Initial Consultation"
+    duration_minutes: 30
+    price: 0
+    description: "Complimentary consultation to discuss your wellness goals"
+
+policies:
+  cancellation: "24 hours notice required. Late cancellations may incur a 50% fee."
+  deposit: true
+  deposit_amount: 50
+  walk_ins: "By appointment only"
+
+faqs:
+  - question: "Do I need a consultation before treatments?"
+    answer: "For injectables and medical treatments, yes. A consultation is required to ensure the best results."
+  - question: "What should I wear?"
+    answer: "Wear comfortable, loose clothing. Robes and towels are provided for massage services."
+  - question: "How often should I get a massage?"
+    answer: "For maintenance, we recommend once a month. For therapeutic needs, your therapist will recommend a schedule."
+  - question: "Is there anything I should avoid before my facial?"
+    answer: "Avoid retinol products 3 days before, and no waxing for at least 1 week prior."
+  - question: "Do you offer membership packages?"
+    answer: "Yes! We have monthly membership options that offer discounts on services. Ask about our wellness membership."
+  - question: "Are your injectables safe?"
+    answer: "All our injectable treatments are FDA-approved and administered by licensed medical professionals."

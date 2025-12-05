@@ -1,0 +1,86 @@
+# Medical & Specialty Care Vertical Template - Plastic Surgery, Dermatology, Dental, IV Therapy, Weight Loss
+name: ""
+location: ""
+phone: ""
+email: ""
+
+hours:
+  monday: { open: "08:00", close: "17:00" }
+  tuesday: { open: "08:00", close: "17:00" }
+  wednesday: { open: "08:00", close: "17:00" }
+  thursday: { open: "08:00", close: "17:00" }
+  friday: { open: "08:00", close: "16:00" }
+  saturday: { closed: true }
+  sunday: { closed: true }
+
+services:
+  - id: "consultation_initial"
+    name: "Initial Consultation"
+    duration_minutes: 45
+    price: 150
+    description: "Comprehensive consultation with our specialist"
+  - id: "consultation_followup"
+    name: "Follow-up Consultation"
+    duration_minutes: 20
+    price: 75
+    description: "Follow-up visit to review progress"
+  - id: "dental_cleaning"
+    name: "Dental Cleaning"
+    duration_minutes: 60
+    price: 120
+    description: "Professional teeth cleaning and oral exam"
+  - id: "dental_whitening"
+    name: "Teeth Whitening"
+    duration_minutes: 90
+    price: 350
+    description: "In-office professional whitening treatment"
+  - id: "iv_hydration"
+    name: "IV Hydration Therapy"
+    duration_minutes: 45
+    price: 150
+    description: "Vitamin-infused IV drip for hydration and energy"
+  - id: "iv_immunity"
+    name: "Immunity IV Boost"
+    duration_minutes: 45
+    price: 200
+    description: "High-dose vitamin C and zinc IV therapy"
+  - id: "weight_consult"
+    name: "Weight Loss Consultation"
+    duration_minutes: 60
+    price: 200
+    description: "Comprehensive weight loss evaluation and plan"
+  - id: "weight_followup"
+    name: "Weight Loss Follow-up"
+    duration_minutes: 30
+    price: 100
+    description: "Progress check and medication management"
+  - id: "dermatology_exam"
+    name: "Skin Exam"
+    duration_minutes: 30
+    price: 125
+    description: "Full body skin examination"
+  - id: "laser_treatment"
+    name: "Laser Treatment"
+    duration_minutes: 45
+    price: 300
+    description: "Laser skin rejuvenation treatment"
+
+policies:
+  cancellation: "48 hours notice required for cancellations. No-shows will be charged full appointment fee."
+  deposit: true
+  deposit_amount: 100
+  walk_ins: "By appointment only. Emergency consultations available."
+
+faqs:
+  - question: "Do you accept insurance?"
+    answer: "We accept most major insurance plans. Please contact us to verify your coverage."
+  - question: "What financing options are available?"
+    answer: "We offer CareCredit and in-house financing plans for qualified patients."
+  - question: "How should I prepare for my consultation?"
+    answer: "Please bring your ID, insurance card, and a list of current medications."
+  - question: "What is your cancellation policy?"
+    answer: "We require 48 hours notice for cancellations. Late cancellations may incur a fee."
+  - question: "Are consultations free?"
+    answer: "Initial consultations have a fee which can be applied toward your treatment."
+  - question: "How long is recovery after procedures?"
+    answer: "Recovery time varies by procedure. Your doctor will provide detailed aftercare instructions."

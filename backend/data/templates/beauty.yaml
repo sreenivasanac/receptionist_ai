@@ -1,0 +1,94 @@
+# Beauty Vertical Template - Hair Salons, Barber Shops, Nail Salons, Makeup Artists, Brow & Lash Studios
+name: ""
+location: ""
+phone: ""
+email: ""
+
+hours:
+  monday: { open: "09:00", close: "19:00" }
+  tuesday: { open: "09:00", close: "19:00" }
+  wednesday: { open: "09:00", close: "19:00" }
+  thursday: { open: "09:00", close: "20:00" }
+  friday: { open: "09:00", close: "20:00" }
+  saturday: { open: "09:00", close: "18:00" }
+  sunday: { closed: true }
+
+services:
+  - id: "haircut_women"
+    name: "Women's Haircut"
+    duration_minutes: 45
+    price: 55
+    description: "Professional haircut with wash, cut, and style"
+  - id: "haircut_men"
+    name: "Men's Haircut"
+    duration_minutes: 30
+    price: 35
+    description: "Classic men's cut with hot towel finish"
+  - id: "haircut_kids"
+    name: "Kids Haircut"
+    duration_minutes: 20
+    price: 25
+    description: "Haircut for children under 12"
+  - id: "color_full"
+    name: "Full Color"
+    duration_minutes: 120
+    price: 120
+    description: "Single-process color treatment"
+  - id: "highlights"
+    name: "Highlights"
+    duration_minutes: 150
+    price: 150
+    description: "Partial or full highlights"
+  - id: "balayage"
+    name: "Balayage"
+    duration_minutes: 180
+    price: 200
+    description: "Hand-painted highlights for natural, sun-kissed look"
+  - id: "blowout"
+    name: "Blowout"
+    duration_minutes: 45
+    price: 45
+    description: "Professional wash and blow dry styling"
+  - id: "manicure"
+    name: "Manicure"
+    duration_minutes: 30
+    price: 30
+    description: "Classic manicure with polish"
+  - id: "pedicure"
+    name: "Pedicure"
+    duration_minutes: 45
+    price: 45
+    description: "Relaxing pedicure with polish"
+  - id: "gel_nails"
+    name: "Gel Nails"
+    duration_minutes: 60
+    price: 50
+    description: "Long-lasting gel nail application"
+  - id: "waxing_brow"
+    name: "Brow Wax"
+    duration_minutes: 15
+    price: 18
+    description: "Eyebrow shaping and waxing"
+  - id: "lash_extensions"
+    name: "Lash Extensions"
+    duration_minutes: 90
+    price: 150
+    description: "Full set of lash extensions"
+
+policies:
+  cancellation: "24 hours notice required for cancellations"
+  deposit: false
+  deposit_amount: 0
+  walk_ins: "Walk-ins welcome, appointments recommended"
+
+faqs:
+  - question: "Do you accept walk-ins?"
+    answer: "Yes, we welcome walk-ins! However, appointments are recommended to ensure availability."
+  - question: "What payment methods do you accept?"
+    answer: "We accept cash, all major credit cards, Apple Pay, and Google Pay."
+  - question: "Do you offer bridal services?"
+    answer: "Yes! We offer bridal hair and makeup packages. Please contact us for a consultation."
+  - question: "Is parking available?"
+    answer: "Yes, free parking is available in our lot behind the building."
+  - question: "Do I need to wash my hair before my appointment?"
+    answer: "No need! All haircut services include a complimentary wash."

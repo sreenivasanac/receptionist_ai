@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Receptionist Widget Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .demo-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .demo-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .demo-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .demo-card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+        }
+        
+        .demo-card h2 {
+            color: #1f2937;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .demo-card p {
+            color: #6b7280;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .code-block {
+            background: #1f2937;
+            color: #e5e7eb;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .code-block code {
+            color: #a5f3fc;
+        }
+        
+        .code-block .attr {
+            color: #fcd34d;
+        }
+        
+        .code-block .string {
+            color: #86efac;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature {
+            background: #f9fafb;
+            padding: 20px;
+            border-radius: 12px;
+        }
+        
+        .feature h3 {
+            color: #6366f1;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        
+        .feature p {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .note {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px 20px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+        }
+        
+        .note p {
+            color: #92400e;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>AI Receptionist</h1>
+            <p>Intelligent chat assistant for your self-care business</p>
+        </div>
+        
+        <div class="demo-card">
+            <h2>Quick Start</h2>
+            <p>Add this single script tag to your website to embed the chat widget:</p>
+            <div class="code-block">
+                <code>&lt;<span class="attr">script</span> 
+    <span class="attr">src</span>=<span class="string">"http://localhost:8000/static/chat.js"</span>
+    <span class="attr">data-business-id</span>=<span class="string">"YOUR_BUSINESS_ID"</span>
+    <span class="attr">data-api-url</span>=<span class="string">"http://localhost:8000"</span>&gt;
+&lt;/<span class="attr">script</span>&gt;</code>
+            </div>
+            
+            <div class="note">
+                <p><strong>Demo Mode:</strong> Click the chat bubble in the bottom right corner to test the widget. Make sure your backend server is running.</p>
+            </div>
+        </div>
+        
+        <div class="demo-card">
+            <h2>Features</h2>
+            <div class="features-grid">
+                <div class="feature">
+                    <h3>Business Info</h3>
+                    <p>Hours, services, pricing, location, and policies</p>
+                </div>
+                <div class="feature">
+                    <h3>Natural Conversation</h3>
+                    <p>AI-powered responses with context retention</p>
+                </div>
+                <div class="feature">
+                    <h3>Customer Collection</h3>
+                    <p>Gather customer info for bookings and follow-ups</p>
+                </div>
+                <div class="feature">
+                    <h3>Customizable</h3>
+                    <p>Configured for your specific business vertical</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-card">
+            <h2>Sample Questions to Try</h2>
+            <p>Once connected, try asking:</p>
+            <ul style="color: #6b7280; padding-left: 20px; line-height: 2;">
+                <li>"What are your hours?"</li>
+                <li>"How much is a haircut?" (for beauty businesses)</li>
+                <li>"Do you accept walk-ins?"</li>
+                <li>"What services do you offer?"</li>
+                <li>"What's your cancellation policy?"</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Widget Script - Replace YOUR_BUSINESS_ID with an actual business ID from your database -->
+    <script 
+        src="src/chat.js" 
+        data-business-id="test-business-123"
+        data-api-url="http://localhost:8000">
+    </script>
+</body>
+</html>
