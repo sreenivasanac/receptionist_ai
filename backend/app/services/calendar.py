@@ -229,8 +229,9 @@ def check_availability(
         if not available_staff:
             available_staff = [{'id': None, 'name': None}]
         
-        # Parse date range and time preference
-        start_date, end_date = parse_date_range(date_range)
+        # Parse date range and time preference - always show 2 months
+        start_date = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        end_date = start_date + timedelta(days=60)  # 2 months
         time_start, time_end = parse_time_preference(time_preference)
         
         # Get existing appointments in this range
@@ -276,9 +277,7 @@ def check_availability(
             
             current_date += timedelta(days=1)
         
-        # Limit to reasonable number
-        all_slots = all_slots[:20]
-        
+        # No limit - return all slots for 2 months
         return {
             'slots': all_slots,
             'service_id': service_id,
@@ -366,9 +365,36 @@ def book_appointment(
         if cursor.fetchone():
             return {'error': 'This time slot is no longer available'}
         
+        # Find or create customer
+        now = datetime.now().isoformat()
+        
+        if not customer_id and customer_phone:
+            # Try to find existing customer by phone
+            cursor.execute(
+                "SELECT id FROM customers WHERE business_id = ? AND phone = ?",
+                (business_id, customer_phone)
+            )
+            existing = cursor.fetchone()
+            
+            if existing:
+                customer_id = existing['id']
+            else:
+                # Create new customer
+                customer_id = str(uuid.uuid4())
+                # Parse name into first/last
+                name_parts = customer_name.split(' ', 1) if customer_name else ['Unknown']
+                first_name = name_parts[0]
+                last_name = name_parts[1] if len(name_parts) > 1 else ''
+                
+                cursor.execute("""
+                    INSERT INTO customers 
+                    (id, business_id, first_name, last_name, email, phone, visit_count, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)
+                """, (customer_id, business_id, first_name, last_name, 
+                      customer_email, customer_phone, now, now))
+        
         # Create appointment
         appointment_id = str(uuid.uuid4())
-        now = datetime.now().isoformat()
         
         cursor.execute("""
             INSERT INTO appointments 
@@ -382,7 +408,7 @@ def book_appointment(
             duration, notes, now, now
         ))
         
-        # Update customer visit count if customer_id provided
+        # Update customer visit count
         if customer_id:
             cursor.execute("""
                 UPDATE customers 

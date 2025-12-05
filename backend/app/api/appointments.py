@@ -1,6 +1,7 @@
 """Appointments API endpoints for V2."""
 import uuid
 import json
+import yaml
 from datetime import datetime
 from typing import Optional
 
@@ -10,6 +11,21 @@ from app.db.database import get_db_connection
 from app.models.appointment import Appointment, AppointmentCreate, AppointmentUpdate
 
 router = APIRouter(prefix="/admin", tags=["Appointments"])
+
+
+def get_service_name_from_config(config_yaml: str, service_id: str) -> str:
+    """Get service name from business config YAML."""
+    if not config_yaml or not service_id:
+        return None
+    try:
+        config = yaml.safe_load(config_yaml)
+        for service in config.get('services', []):
+            if service.get('id') == service_id:
+                return service.get('name')
+        # Fallback: format service_id as title
+        return service_id.replace('_', ' ').title()
+    except:
+        return service_id.replace('_', ' ').title() if service_id else None
 
 
 @router.get("/{business_id}/appointments", response_model=list[Appointment])
@@ -24,10 +40,14 @@ async def list_appointments(
     with get_db_connection() as conn:
         cursor = conn.cursor()
         
+        # Get business config for service names
+        cursor.execute("SELECT config_yaml FROM businesses WHERE id = ?", (business_id,))
+        biz = cursor.fetchone()
+        config_yaml = biz["config_yaml"] if biz else None
+        
         query = """
-            SELECT a.*, s.name as service_name, st.name as staff_name
+            SELECT a.*, st.name as staff_name
             FROM appointments a
-            LEFT JOIN services s ON a.service_id = s.id
             LEFT JOIN staff st ON a.staff_id = st.id
             WHERE a.business_id = ?
         """
@@ -66,7 +86,7 @@ async def list_appointments(
                 duration_minutes=row["duration_minutes"],
                 status=row["status"],
                 notes=row["notes"],
-                service_name=row["service_name"],
+                service_name=get_service_name_from_config(config_yaml, row["service_id"]),
                 staff_name=row["staff_name"],
                 created_at=row["created_at"],
                 updated_at=row["updated_at"]
@@ -80,10 +100,15 @@ async def get_appointment(business_id: str, appointment_id: str):
     """Get a specific appointment."""
     with get_db_connection() as conn:
         cursor = conn.cursor()
+        
+        # Get business config for service name
+        cursor.execute("SELECT config_yaml FROM businesses WHERE id = ?", (business_id,))
+        biz = cursor.fetchone()
+        config_yaml = biz["config_yaml"] if biz else None
+        
         cursor.execute("""
-            SELECT a.*, s.name as service_name, st.name as staff_name
+            SELECT a.*, st.name as staff_name
             FROM appointments a
-            LEFT JOIN services s ON a.service_id = s.id
             LEFT JOIN staff st ON a.staff_id = st.id
             WHERE a.id = ? AND a.business_id = ?
         """, (appointment_id, business_id))
@@ -106,7 +131,7 @@ async def get_appointment(business_id: str, appointment_id: str):
             duration_minutes=row["duration_minutes"],
             status=row["status"],
             notes=row["notes"],
-            service_name=row["service_name"],
+            service_name=get_service_name_from_config(config_yaml, row["service_id"]),
             staff_name=row["staff_name"],
             created_at=row["created_at"],
             updated_at=row["updated_at"]
