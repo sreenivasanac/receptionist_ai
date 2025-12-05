@@ -69,7 +69,7 @@ export default function ChatDemo() {
       <div className="card">
         <h2 className="text-lg font-semibold mb-4">Test Your Chatbot</h2>
         <p className="text-sm text-muted-foreground mb-6">
-          Click the chat bubble in the bottom right corner to test your AI receptionist. 
+          Look for the chat bubble in the bottom-right corner of your screen to test your AI receptionist. 
           Make sure your backend server is running on port 8001.
         </p>
         
@@ -106,10 +106,10 @@ export default function ChatDemo() {
           </div>
           
           {/* Arrow pointing to chat widget */}
-          <div className="absolute bottom-4 right-4 flex items-center gap-2 text-muted-foreground">
-            <span className="text-sm">Click the chat bubble</span>
+          <div className="absolute bottom-8 right-8 flex flex-col items-end gap-3 text-muted-foreground">
+            <span className="text-sm font-medium">Open the chat widget below</span>
             <svg className="w-6 h-6 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
           </div>
         </div>

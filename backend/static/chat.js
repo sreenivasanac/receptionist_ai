@@ -400,6 +400,15 @@
   background: var(--keystone-border);
   cursor: not-allowed;
 }
+.keystone-no-slots {
+  color: var(--keystone-text-light);
+  font-size: 13px;
+  padding: 12px;
+  text-align: center;
+  background: #fff5f5;
+  border-radius: 8px;
+  margin: 4px 0;
+}
 
 @media (max-width: 480px) {
   .keystone-chat-widget { bottom: 10px; right: 10px; }
@@ -649,9 +658,9 @@
     
     renderServiceSelect(config) {
       const services = config.services || [];
-      const multiSelect = config.multi_select !== false;
+      const multiSelect = config.multi_select === true;  // Default to single-select
       
-      let html = `<h4>Select ${multiSelect ? 'services' : 'a service'}:</h4>`;
+      let html = '<h4>Select a service:</h4>';
       html += '<div class="keystone-service-list">';
       
       services.forEach((service, index) => {
@@ -679,23 +688,83 @@
     
     renderDateTimePicker(config) {
       const minDate = config.min_date || new Date().toISOString().split('T')[0];
-      const timeSlots = config.time_slots || ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM'];
+      const slots = config.slots || [];
+      
+      // Get unique dates that have slots
+      const datesWithSlots = [...new Set(slots.map(s => s.date))].sort();
+      const defaultDate = datesWithSlots[0] || minDate;
+      
+      // Get slots for the default date
+      const slotsForDate = slots.filter(s => s.date === defaultDate);
       
       let html = '<h4>Select date and time:</h4>';
       html += '<div class="keystone-datetime-picker">';
       
-      html += `<input type="date" class="keystone-date-input" id="keystone-date" min="${minDate}" value="${minDate}">`;
+      html += `<input type="date" class="keystone-date-input" id="keystone-date" min="${minDate}" value="${defaultDate}">`;
       
-      html += '<div class="keystone-time-slots">';
-      timeSlots.forEach(slot => {
-        html += `<button type="button" class="keystone-time-slot" data-time="${slot}">${slot}</button>`;
-      });
+      html += '<div class="keystone-time-slots" id="keystone-time-slots-container">';
+      if (slotsForDate.length > 0) {
+        slotsForDate.forEach(slot => {
+          const timeDisplay = this.formatTime(slot.time);
+          const staffInfo = slot.staff_name ? ` (${slot.staff_name})` : '';
+          html += `<button type="button" class="keystone-time-slot" data-slot-id="${slot.id}" data-time="${slot.time}" data-date="${slot.date}">${timeDisplay}${staffInfo}</button>`;
+        });
+      } else {
+        html += '<p class="keystone-no-slots">No available times for this date</p>';
+      }
       html += '</div>';
       
       html += '</div>';
       html += '<button class="keystone-submit-btn" id="keystone-submit-datetime" disabled>Continue</button>';
       
       return html;
+    }
+    
+    formatTime(time24) {
+      const [hours, minutes] = time24.split(':');
+      const h = parseInt(hours, 10);
+      const suffix = h >= 12 ? 'PM' : 'AM';
+      const h12 = h % 12 || 12;
+      return `${h12}:${minutes} ${suffix}`;
+    }
+    
+    updateTimeSlotsForDate(date) {
+      const config = this.currentInputConfig;
+      if (!config || !config.slots) return;
+      
+      const slotsForDate = config.slots.filter(s => s.date === date);
+      const container = this.elements.structuredInput.querySelector('#keystone-time-slots-container');
+      const submitBtn = this.elements.structuredInput.querySelector('#keystone-submit-datetime');
+      
+      if (!container) return;
+      
+      let html = '';
+      if (slotsForDate.length > 0) {
+        slotsForDate.forEach(slot => {
+          const timeDisplay = this.formatTime(slot.time);
+          const staffInfo = slot.staff_name ? ` (${slot.staff_name})` : '';
+          html += `<button type="button" class="keystone-time-slot" data-slot-id="${slot.id}" data-time="${slot.time}" data-date="${slot.date}">${timeDisplay}${staffInfo}</button>`;
+        });
+      } else {
+        html = '<p class="keystone-no-slots">No available times for this date. Try a different date.</p>';
+      }
+      
+      container.innerHTML = html;
+      submitBtn.disabled = true;
+      this.selectedSlotId = null;
+      
+      // Re-bind click events for new time slots
+      const timeSlots = container.querySelectorAll('.keystone-time-slot');
+      timeSlots.forEach(slot => {
+        slot.addEventListener('click', () => {
+          timeSlots.forEach(s => s.classList.remove('selected'));
+          slot.classList.add('selected');
+          this.selectedSlotId = slot.dataset.slotId;
+          this.selectedSlotTime = slot.dataset.time;
+          this.selectedSlotDate = slot.dataset.date;
+          submitBtn.disabled = false;
+        });
+      });
     }
     
     renderContactForm(config) {
@@ -782,26 +851,40 @@
       const timeSlots = this.elements.structuredInput.querySelectorAll('.keystone-time-slot');
       const submitBtn = this.elements.structuredInput.querySelector('#keystone-submit-datetime');
       const dateInput = this.elements.structuredInput.querySelector('#keystone-date');
-      let selectedTime = null;
       
+      // Initialize selected slot tracking
+      this.selectedSlotId = null;
+      this.selectedSlotTime = null;
+      this.selectedSlotDate = null;
+      
+      // Handle date change - update available time slots
+      dateInput.addEventListener('change', (e) => {
+        this.updateTimeSlotsForDate(e.target.value);
+      });
+      
+      // Handle time slot selection
       timeSlots.forEach(slot => {
         slot.addEventListener('click', () => {
           timeSlots.forEach(s => s.classList.remove('selected'));
           slot.classList.add('selected');
-          selectedTime = slot.dataset.time;
+          this.selectedSlotId = slot.dataset.slotId;
+          this.selectedSlotTime = slot.dataset.time;
+          this.selectedSlotDate = slot.dataset.date;
           submitBtn.disabled = false;
         });
       });
       
+      // Handle submit
       submitBtn.addEventListener('click', () => {
-        const date = dateInput.value;
-        if (date && selectedTime) {
-          const formattedDate = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+        if (this.selectedSlotId && this.selectedSlotDate && this.selectedSlotTime) {
+          const formattedDate = new Date(this.selectedSlotDate + 'T00:00:00').toLocaleDateString('en-US', {
             weekday: 'long',
             month: 'long',
             day: 'numeric'
           });
-          const message = `I'd like to book for ${formattedDate} at ${selectedTime}`;
+          const timeDisplay = this.formatTime(this.selectedSlotTime);
+          // Include slot_id in a way the agent can parse it
+          const message = `I'd like to book for ${formattedDate} at ${timeDisplay} [slot:${this.selectedSlotId}]`;
           this.sendMessage(message);
         }
       });

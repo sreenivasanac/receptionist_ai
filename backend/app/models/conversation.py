@@ -28,13 +28,29 @@ class ServiceOption(BaseModel):
     description: Optional[str] = None
 
 
+class TimeSlotOption(BaseModel):
+    """Available time slot for booking."""
+    id: str
+    date: str
+    time: str
+    staff_id: Optional[str] = None
+    staff_name: Optional[str] = None
+    duration_minutes: Optional[int] = None
+
+
 class InputConfig(BaseModel):
     """Configuration for structured input components."""
+    # Service selection
     services: Optional[list[ServiceOption]] = None
     multi_select: bool = False
+    # Contact form
     fields: Optional[list[str]] = None
+    # Date/time picker
     min_date: Optional[str] = None
+    max_date: Optional[str] = None
+    available_dates: Optional[list[str]] = None
     time_slots: Optional[list[str]] = None
+    slots: Optional[list[TimeSlotOption]] = None  # Full slot objects for V2 booking
 
 
 class ChatRequest(BaseModel):

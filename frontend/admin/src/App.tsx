@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -8,6 +7,12 @@ import BusinessSetup from './pages/BusinessSetup'
 import StaffManagement from './pages/StaffManagement'
 import Settings from './pages/Settings'
 import ChatDemo from './pages/ChatDemo'
+// V2 Pages
+import Appointments from './pages/Appointments'
+import Leads from './pages/Leads'
+import Customers from './pages/Customers'
+import Waitlist from './pages/Waitlist'
+import Marketing from './pages/Marketing'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -42,6 +47,11 @@ function AppRoutes() {
         </ProtectedRoute>
       }>
         <Route index element={<Dashboard />} />
+        <Route path="appointments" element={<Appointments />} />
+        <Route path="customers" element={<Customers />} />
+        <Route path="leads" element={<Leads />} />
+        <Route path="waitlist" element={<Waitlist />} />
+        <Route path="marketing" element={<Marketing />} />
         <Route path="business" element={<BusinessSetup />} />
         <Route path="staff" element={<StaffManagement />} />
         <Route path="settings" element={<Settings />} />

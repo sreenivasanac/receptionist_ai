@@ -9,7 +9,7 @@ from fastapi.responses import StreamingResponse
 import yaml
 
 from app.db.database import get_db_connection
-from app.models.conversation import ChatRequest, ChatResponse, ChatMessage, CustomerInfo, InputConfig, ServiceOption
+from app.models.conversation import ChatRequest, ChatResponse, ChatMessage, CustomerInfo, InputConfig, ServiceOption, TimeSlotOption
 from app.agent.receptionist import create_receptionist_agent, load_business_config
 from app.agent.prompts import get_greeting_message
 
@@ -44,7 +44,8 @@ def get_or_create_agent(business_id: str, force_refresh: bool = False):
         agent, toolkit = create_receptionist_agent(
             business_config=config,
             business_name=biz["name"],
-            business_type=biz["type"]
+            business_type=biz["type"],
+            business_id=business_id
         )
         
         agent_cache[business_id] = {
@@ -106,6 +107,17 @@ def save_conversation(conv_id: str, messages: list, customer_info: dict):
         conn.commit()
 
 
+def extract_slot_id(message: str) -> tuple[str, str | None]:
+    """Extract slot_id from message if present. Returns (clean_message, slot_id)."""
+    import re
+    match = re.search(r'\[slot:([^\]]+)\]', message)
+    if match:
+        slot_id = match.group(1)
+        clean_message = re.sub(r'\s*\[slot:[^\]]+\]', '', message)
+        return clean_message, slot_id
+    return message, None
+
+
 @router.post("/message", response_model=ChatResponse)
 async def send_message(request: ChatRequest):
     """
@@ -123,15 +135,20 @@ async def send_message(request: ChatRequest):
                 toolkit.customer_info[field] = value
                 conversation["customer_info"][field] = value
     
+    # Extract slot_id from message if present (from datetime picker UI)
+    message_text, slot_id = extract_slot_id(request.message)
+    if slot_id:
+        toolkit.selected_slot_id = slot_id
+    
     conversation["messages"].append({
         "role": "user",
-        "content": request.message,
+        "content": message_text,  # Store clean message without slot_id tag
         "timestamp": datetime.now().isoformat()
     })
     
     try:
         # Use Agno's native session management - it handles history automatically
-        response = agent.run(request.message, session_id=request.session_id)
+        response = agent.run(message_text, session_id=request.session_id)
         assistant_message = response.content
     except Exception as e:
         assistant_message = "I apologize, but I'm having trouble processing your request right now. Please try again or contact us directly."
@@ -173,16 +190,33 @@ async def send_message(request: ChatRequest):
             ]
             input_config = InputConfig(
                 services=services,
-                multi_select=config_data.get("multi_select", True)
+                multi_select=config_data.get("multi_select", False)
             )
         elif input_type == "contact_form":
             input_config = InputConfig(
                 fields=config_data.get("fields", ["name", "phone"])
             )
         elif input_type == "datetime_picker":
+            # Convert slot dicts to TimeSlotOption models if present
+            slots = None
+            if config_data.get("slots"):
+                slots = [
+                    TimeSlotOption(
+                        id=s.get("id", ""),
+                        date=s.get("date", ""),
+                        time=s.get("time", ""),
+                        staff_id=s.get("staff_id"),
+                        staff_name=s.get("staff_name"),
+                        duration_minutes=s.get("duration_minutes")
+                    )
+                    for s in config_data.get("slots", [])
+                ]
             input_config = InputConfig(
                 min_date=config_data.get("min_date"),
-                time_slots=config_data.get("time_slots")
+                max_date=config_data.get("max_date"),
+                available_dates=config_data.get("available_dates"),
+                time_slots=config_data.get("time_slots"),
+                slots=slots
             )
         
         # Clear the pending input after processing
@@ -258,3 +292,20 @@ async def clear_session(business_id: str, session_id: str):
         conn.commit()
         
         return {"message": "Session cleared"}
+
+
+@router.post("/admin/refresh-agent/{business_id}")
+async def refresh_agent(business_id: str):
+    """Force refresh an agent to pick up new prompts/config."""
+    invalidate_agent_cache(business_id)
+    # Pre-load the agent with new config
+    get_or_create_agent(business_id, force_refresh=True)
+    return {"message": f"Agent refreshed for business {business_id}"}
+
+
+@router.post("/admin/refresh-all-agents")
+async def refresh_all_agents():
+    """Force refresh all cached agents."""
+    cleared = list(agent_cache.keys())
+    agent_cache.clear()
+    return {"message": f"Cleared {len(cleared)} cached agents", "cleared": cleared}
