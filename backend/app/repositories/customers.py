@@ -13,6 +13,12 @@ class CustomerRepository(BaseRepository[Customer]):
     
     def _row_to_model(self, row, favorite_service_name: Optional[str] = None) -> Customer:
         """Convert a database row to a Customer model."""
+        service_name = favorite_service_name
+        if service_name is None:
+            try:
+                service_name = row["favorite_service_name"]
+            except (IndexError, KeyError):
+                service_name = None
         return Customer(
             id=row["id"],
             business_id=row["business_id"],
@@ -23,7 +29,7 @@ class CustomerRepository(BaseRepository[Customer]):
             visit_count=row["visit_count"],
             last_visit_date=row["last_visit_date"],
             favorite_service_id=row["favorite_service_id"],
-            favorite_service_name=favorite_service_name or row.get("favorite_service_name"),
+            favorite_service_name=service_name,
             notes=row["notes"],
             created_at=row["created_at"],
             updated_at=row["updated_at"]

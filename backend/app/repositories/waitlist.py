@@ -14,6 +14,10 @@ class WaitlistRepository(BaseRepository[WaitlistEntry]):
     
     def _row_to_model(self, row) -> WaitlistEntry:
         """Convert a database row to a WaitlistEntry model."""
+        try:
+            service_name = row["service_name"]
+        except (IndexError, KeyError):
+            service_name = None
         return WaitlistEntry(
             id=row["id"],
             business_id=row["business_id"],
@@ -26,7 +30,7 @@ class WaitlistRepository(BaseRepository[WaitlistEntry]):
             contact_method=row["contact_method"],
             status=row["status"],
             notes=row["notes"],
-            service_name=row.get("service_name"),
+            service_name=service_name,
             created_at=row["created_at"],
             updated_at=row["updated_at"]
         )
