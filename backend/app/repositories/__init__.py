@@ -9,6 +9,9 @@ from app.repositories.campaigns import CampaignRepository
 from app.repositories.business import BusinessRepository
 from app.repositories.conversations import ConversationRepository
 from app.repositories.users import UserRepository
+# V3 Repositories
+from app.repositories.workflows import WorkflowRepository, workflow_repo
+from app.repositories.analytics import AnalyticsRepository, analytics_repo
 
 # Singleton instances for easy importing
 staff_repo = StaffRepository()
@@ -33,6 +36,8 @@ __all__ = [
     "BusinessRepository",
     "ConversationRepository",
     "UserRepository",
+    "WorkflowRepository",
+    "AnalyticsRepository",
     "staff_repo",
     "service_repo",
     "customer_repo",
@@ -43,4 +48,6 @@ __all__ = [
     "business_repo",
     "conversation_repo",
     "user_repo",
+    "workflow_repo",
+    "analytics_repo",
 ]

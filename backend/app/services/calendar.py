@@ -366,7 +366,9 @@ def cancel_appointment(
     customer_phone: str,
     appointment_id: Optional[str] = None
 ) -> dict:
-    """Cancel an appointment."""
+    """Cancel an appointment and notify waitlist customers."""
+    from app.repositories import waitlist_repo
+    
     if appointment_id:
         appointment = appointment_repo.find_by_id_and_business(appointment_id, business_id)
         if not appointment or appointment.status != 'scheduled':
@@ -389,10 +391,112 @@ def cancel_appointment(
     
     appointment_repo.update_status(business_id, appt_data['id'], 'cancelled')
     
-    return {
+    # V3: Cancellation Recovery - notify waitlist customers
+    waitlist_customers = notify_waitlist_on_cancellation(
+        business_id=business_id,
+        service_id=appt_data['service_id'],
+        date=appt_data['date'],
+        time=appt_data['time'],
+        cancelled_appointment_id=appt_data['id']
+    )
+    
+    result = {
         'cancelled': True,
         'appointment_id': appt_data['id'],
         'message': f"Your {service_name} on {appt_data['date']} at {appt_data['time']} has been cancelled."
+    }
+    
+    if waitlist_customers:
+        result['waitlist_notified'] = len(waitlist_customers)
+        result['waitlist_message'] = f"We've notified {len(waitlist_customers)} customer(s) on the waitlist about this opening."
+    
+    return result
+
+
+def notify_waitlist_on_cancellation(
+    business_id: str,
+    service_id: str,
+    date: str,
+    time: str,
+    cancelled_appointment_id: str
+) -> list[dict]:
+    """
+    Notify waitlist customers when a slot opens up due to cancellation.
+    Returns list of customers who were notified.
+    """
+    from app.repositories import waitlist_repo
+    
+    waiting_customers = waitlist_repo.find_waiting_for_service_and_date(
+        business_id=business_id,
+        service_id=service_id,
+        date=date,
+        time_preference=time
+    )
+    
+    notified = []
+    for entry in waiting_customers[:3]:
+        waitlist_repo.mark_notified(entry.id, cancelled_appointment_id)
+        notified.append({
+            'waitlist_id': entry.id,
+            'customer_name': entry.customer_name,
+            'customer_contact': entry.customer_contact,
+            'contact_method': entry.contact_method
+        })
+    
+    return notified
+
+
+def book_from_waitlist(
+    business_id: str,
+    waitlist_id: str,
+    slot_id: str,
+    config: Optional[dict] = None
+) -> dict:
+    """
+    Book an appointment from a waitlist notification.
+    This allows a waitlisted customer to quickly grab a cancelled slot.
+    """
+    from app.repositories import waitlist_repo
+    
+    entry = waitlist_repo.find_with_service_name(business_id, waitlist_id)
+    if not entry:
+        return {'error': 'Waitlist entry not found'}
+    
+    if entry.status not in ['waiting', 'notified']:
+        return {'error': 'This waitlist entry is no longer valid'}
+    
+    result = book_appointment(
+        business_id=business_id,
+        service_id=entry.service_id,
+        slot_id=slot_id,
+        customer_name=entry.customer_name,
+        customer_phone=entry.customer_contact if entry.contact_method == 'phone' else '',
+        customer_email=entry.customer_contact if entry.contact_method == 'email' else None,
+        customer_id=entry.customer_id,
+        config=config
+    )
+    
+    if 'error' not in result:
+        waitlist_repo.mark_booked(waitlist_id)
+        result['from_waitlist'] = True
+        result['message'] += " You've been removed from the waitlist."
+    
+    return result
+
+
+def decline_waitlist_slot(business_id: str, waitlist_id: str) -> dict:
+    """Decline a waitlist notification and return to waiting status."""
+    from app.repositories import waitlist_repo
+    
+    entry = waitlist_repo.find_with_service_name(business_id, waitlist_id)
+    if not entry:
+        return {'error': 'Waitlist entry not found'}
+    
+    waitlist_repo.mark_declined(waitlist_id)
+    
+    return {
+        'declined': True,
+        'message': "No problem! You're still on our waitlist and we'll notify you when another slot opens up."
     }
 
 

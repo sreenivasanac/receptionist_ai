@@ -12,6 +12,10 @@ from app.api import (
     appointments_router, leads_router, customers_router, campaigns_router,
     faqs_router
 )
+# V3 Routers
+from app.api.analytics import router as analytics_router
+from app.api.workflows import router as workflows_router
+from app.api.conversations import router as conversations_router
 
 
 @asynccontextmanager
@@ -24,7 +28,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="AI Receptionist API",
     description="Keystone AI Receptionist - Backend API for self-care business chatbot",
-    version="2.0.0",
+    version="3.0.0",
     lifespan=lifespan
 )
 
@@ -49,6 +53,11 @@ app.include_router(customers_router)
 app.include_router(campaigns_router)
 app.include_router(faqs_router)
 
+# V3 Routers
+app.include_router(analytics_router)
+app.include_router(workflows_router)
+app.include_router(conversations_router)
+
 # Serve static files (chat widget)
 static_path = Path(__file__).parent.parent / "static"
 if static_path.exists():
@@ -60,7 +69,7 @@ async def root():
     """Root endpoint."""
     return {
         "name": "AI Receptionist API",
-        "version": "2.0.0",
+        "version": "3.0.0",
         "status": "running"
     }
 

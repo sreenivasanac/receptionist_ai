@@ -230,3 +230,155 @@ class WaitlistRepository(BaseRepository[WaitlistEntry]):
             ))
             conn.commit()
             return cursor.rowcount > 0
+    
+    # V3 Cancellation Recovery Methods
+    
+    def find_waiting_for_service_and_date(
+        self,
+        business_id: str,
+        service_id: str,
+        date: str,
+        time_preference: Optional[str] = None
+    ) -> list[WaitlistEntry]:
+        """
+        Find waitlist entries that match a cancelled appointment slot.
+        Returns entries ordered by creation date (first come, first served).
+        """
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT w.*, s.name as service_name
+                FROM waitlist w
+                LEFT JOIN services s ON w.service_id = s.id
+                WHERE w.business_id = ? 
+                AND w.service_id = ?
+                AND w.status = 'waiting'
+                AND (w.preferred_dates LIKE ? OR w.preferred_dates = '[]')
+                ORDER BY w.created_at ASC
+            """, (business_id, service_id, f'%"{date}"%'))
+            
+            rows = cursor.fetchall()
+            entries = [self._row_to_model(row) for row in rows]
+            
+            if time_preference and entries:
+                filtered = []
+                for entry in entries:
+                    prefs = entry.preferred_times
+                    if not prefs or time_preference in prefs or self._time_matches_preference(time_preference, prefs):
+                        filtered.append(entry)
+                return filtered if filtered else entries[:3]
+            
+            return entries
+    
+    def _time_matches_preference(self, slot_time: str, preferences: list[str]) -> bool:
+        """Check if a time slot matches time preferences like 'morning', 'afternoon'."""
+        try:
+            hour = int(slot_time.split(":")[0])
+            for pref in preferences:
+                pref_lower = pref.lower()
+                if pref_lower == "morning" and 6 <= hour < 12:
+                    return True
+                elif pref_lower == "afternoon" and 12 <= hour < 17:
+                    return True
+                elif pref_lower == "evening" and 17 <= hour < 21:
+                    return True
+                elif "after 5" in pref_lower and hour >= 17:
+                    return True
+                elif "before noon" in pref_lower and hour < 12:
+                    return True
+        except:
+            pass
+        return False
+    
+    def mark_notified(
+        self,
+        waitlist_id: str,
+        cancelled_appointment_id: Optional[str] = None
+    ) -> bool:
+        """Mark a waitlist entry as notified about available slot."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE waitlist SET status = 'notified', updated_at = ?
+                WHERE id = ?
+            """, (self._now(), waitlist_id))
+            
+            if cancelled_appointment_id:
+                notification_id = self._generate_id()
+                cursor.execute("""
+                    INSERT INTO waitlist_notifications 
+                    (id, waitlist_id, cancelled_appointment_id, notification_sent_at, response)
+                    VALUES (?, ?, ?, ?, 'pending')
+                """, (notification_id, waitlist_id, cancelled_appointment_id, self._now()))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    
+    def mark_booked(self, waitlist_id: str) -> bool:
+        """Mark a waitlist entry as booked (converted)."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE waitlist SET status = 'booked', updated_at = ?
+                WHERE id = ?
+            """, (self._now(), waitlist_id))
+            
+            cursor.execute("""
+                UPDATE waitlist_notifications 
+                SET response = 'accepted', response_at = ?, booking_created = 1
+                WHERE waitlist_id = ? AND response = 'pending'
+            """, (self._now(), waitlist_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    
+    def mark_declined(self, waitlist_id: str) -> bool:
+        """Mark a waitlist notification as declined."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                UPDATE waitlist SET status = 'waiting', updated_at = ?
+                WHERE id = ?
+            """, (self._now(), waitlist_id))
+            
+            cursor.execute("""
+                UPDATE waitlist_notifications 
+                SET response = 'declined', response_at = ?
+                WHERE waitlist_id = ? AND response = 'pending'
+            """, (self._now(), waitlist_id))
+            
+            conn.commit()
+            return cursor.rowcount > 0
+    
+    def get_notification_stats(self, business_id: str) -> dict:
+        """Get waitlist notification statistics."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total_notifications,
+                    SUM(CASE WHEN n.response = 'accepted' THEN 1 ELSE 0 END) as accepted,
+                    SUM(CASE WHEN n.response = 'declined' THEN 1 ELSE 0 END) as declined,
+                    SUM(CASE WHEN n.response = 'expired' THEN 1 ELSE 0 END) as expired,
+                    SUM(CASE WHEN n.response = 'pending' THEN 1 ELSE 0 END) as pending
+                FROM waitlist_notifications n
+                JOIN waitlist w ON n.waitlist_id = w.id
+                WHERE w.business_id = ?
+            """, (business_id,))
+            
+            row = cursor.fetchone()
+            return {
+                "total_notifications": row["total_notifications"] or 0,
+                "accepted": row["accepted"] or 0,
+                "declined": row["declined"] or 0,
+                "expired": row["expired"] or 0,
+                "pending": row["pending"] or 0,
+                "conversion_rate": (
+                    (row["accepted"] / row["total_notifications"] * 100) 
+                    if row["total_notifications"] else 0
+                )
+            }
