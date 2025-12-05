@@ -71,8 +71,8 @@ export default function Settings() {
   return (
     <div className="p-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-500 mt-1">Configure your AI receptionist and get embed code</p>
+        <h1 className="text-2xl font-semibold text-card-foreground">Settings</h1>
+        <p className="text-muted-foreground mt-1">Configure {business.name}'s AI receptionist</p>
       </div>
       
       <div className="space-y-6">

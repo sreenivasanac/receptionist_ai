@@ -142,7 +142,7 @@ export default function Analytics() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-card-foreground">Analytics</h1>
-          <p className="text-muted-foreground mt-1">Business performance insights</p>
+          <p className="text-muted-foreground mt-1">Performance insights for {business.name}</p>
         </div>
         <select
           value={period}

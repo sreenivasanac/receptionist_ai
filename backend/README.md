@@ -36,8 +36,10 @@ app/
 │   ├── workflows.py     # V3: Custom workflow management
 │   └── conversations.py # V3: Conversation history & export
 ├── agent/
-│   ├── receptionist.py  # Agno agent with V1-V3 tools
-│   └── prompts.py       # System prompts
+│   ├── receptionist.py  # Agno agent with modular toolkits
+│   ├── prompts/         # Modular system prompts (base, booking, services, etc.)
+│   ├── toolkits/        # Grouped tools (booking, customer, info, lead)
+│   └── utils/           # Agent utilities (context, validation)
 ├── tools/
 │   ├── booking.py       # V2: Availability, booking tools
 │   ├── customers.py     # V2: Customer identification tools
@@ -134,11 +136,13 @@ app/
 
 ## Agent Tools (V2)
 
-The AI agent has access to these tools for handling conversations:
+The AI agent has access to these tools for handling conversations. Tools trigger interactive UI components in the chat widget (service picker, calendar, contact form).
 
 **Booking Tools:**
-- `check_availability` - Check available time slots for services
-- `book_appointment` - Book an appointment
+- `start_booking_flow` - Show interactive service picker UI
+- `check_availability` - Show calendar with available time slots
+- `collect_customer_info` - Show contact form for customer details
+- `book_appointment` - Complete the booking
 - `cancel_appointment` - Cancel existing appointment
 - `reschedule_appointment` - Reschedule appointment
 

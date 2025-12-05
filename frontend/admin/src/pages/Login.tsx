@@ -48,6 +48,9 @@ export default function Login() {
             placeholder="Enter your username"
             required
           />
+          <p className="text-xs text-muted-foreground mt-1.5">
+            Try <button type="button" onClick={() => setUsername('salon_sheela')} className="text-primary hover:underline font-medium">salon_sheela</button> to test
+          </p>
         </div>
         
         <div>

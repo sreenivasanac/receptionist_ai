@@ -173,6 +173,17 @@
   align-items: center;
   gap: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.keystone-chat-header:hover {
+  background: linear-gradient(135deg, #5558e8, #4338ca);
+}
+
+.keystone-chat-header:active {
+  background: linear-gradient(135deg, #4f46e5, #3730a3);
 }
 
 .keystone-chat-header-avatar {
@@ -236,16 +247,67 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  position: relative;
+}
+
+.keystone-chat-clear::after {
+  content: 'Reset conversation';
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1e293b;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.keystone-chat-clear:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .keystone-chat-clear:hover {
   background: rgba(255, 255, 255, 0.25);
-  transform: rotate(90deg);
 }
 
 .keystone-chat-clear svg {
   width: 18px;
   height: 18px;
+  fill: white;
+  transition: transform 0.2s ease;
+}
+
+.keystone-chat-clear:hover svg {
+  transform: rotate(90deg);
+}
+
+.keystone-chat-minimize {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.keystone-chat-header:hover .keystone-chat-minimize {
+  opacity: 1;
+}
+
+.keystone-chat-minimize svg {
+  width: 20px;
+  height: 20px;
   fill: white;
 }
 
@@ -459,6 +521,12 @@
   box-shadow: none;
 }
 
+.keystone-chat-send svg {
+  width: 20px;
+  height: 20px;
+  fill: white;
+}
+
 /* Powered By */
 .keystone-powered-by {
   text-align: center;
@@ -474,6 +542,9 @@
   padding: 16px 20px;
   border-top: 1px solid var(--keystone-border);
   background: #f8fafc;
+  max-height: 350px;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
 
 .keystone-service-item {
@@ -481,12 +552,11 @@
   padding: 14px;
   background: white;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  border: 1px solid transparent;
+  border: 1px solid var(--keystone-border);
 }
 
 .keystone-service-item:hover {
   border-color: var(--keystone-primary);
-  transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
@@ -495,6 +565,178 @@
   border-radius: 12px;
   font-weight: 600;
   letter-spacing: 0.01em;
+  width: 100%;
+  margin-top: 12px;
+  background: var(--keystone-primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.keystone-submit-btn:hover:not(:disabled) {
+  background: var(--keystone-primary-hover);
+}
+
+.keystone-submit-btn:disabled {
+  background: var(--keystone-border);
+  cursor: not-allowed;
+}
+
+/* Service List */
+.keystone-service-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.keystone-service-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.keystone-service-item input {
+  accent-color: var(--keystone-primary);
+}
+
+.keystone-service-item.selected {
+  border-color: var(--keystone-primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.keystone-service-info {
+  flex: 1;
+}
+
+.keystone-service-name {
+  font-weight: 500;
+  color: var(--keystone-text);
+}
+
+.keystone-service-details {
+  font-size: 13px;
+  color: var(--keystone-text-light);
+}
+
+.keystone-service-price {
+  font-weight: 600;
+  color: var(--keystone-primary);
+}
+
+/* DateTime Picker */
+.keystone-datetime-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.keystone-date-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  color: var(--keystone-text);
+  box-sizing: border-box;
+}
+
+.keystone-date-input:focus {
+  outline: none;
+  border-color: var(--keystone-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.keystone-time-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.keystone-time-slot {
+  padding: 10px 8px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  background: white;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.keystone-time-slot:hover {
+  border-color: var(--keystone-primary);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.keystone-time-slot.selected {
+  background: var(--keystone-primary);
+  color: white;
+  border-color: var(--keystone-primary);
+}
+
+.keystone-no-slots {
+  color: var(--keystone-text-light);
+  font-size: 14px;
+  text-align: center;
+  padding: 16px;
+}
+
+/* Contact Form */
+.keystone-contact-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.keystone-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.keystone-form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--keystone-text);
+}
+
+.keystone-form-group input {
+  padding: 12px 14px;
+  border: 1px solid var(--keystone-border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: white;
+  color: var(--keystone-text);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.keystone-form-group input::placeholder {
+  color: var(--keystone-text-light);
+}
+
+.keystone-form-group input:focus {
+  outline: none;
+  border-color: var(--keystone-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Structured Input Header */
+.keystone-structured-input h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--keystone-text);
 }
 
 /* Mobile Responsive */
@@ -530,7 +772,7 @@
         </button>
         
         <div class="keystone-chat-container" id="keystone-container">
-          <div class="keystone-chat-header">
+          <div class="keystone-chat-header" id="keystone-header" title="Click to minimize">
             <div class="keystone-chat-header-avatar">
               <svg viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
@@ -541,11 +783,16 @@
               <span class="keystone-chat-header-status">Online</span>
             </div>
             <div class="keystone-chat-header-actions">
-              <button class="keystone-chat-clear" id="keystone-clear" title="Start new conversation">
+              <button class="keystone-chat-clear" id="keystone-clear">
                 <svg viewBox="0 0 24 24">
                   <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
                 </svg>
               </button>
+              <div class="keystone-chat-minimize" title="Click to minimize">
+                <svg viewBox="0 0 24 24">
+                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                </svg>
+              </div>
             </div>
           </div>
           
@@ -590,6 +837,7 @@
         widget,
         toggle: document.getElementById('keystone-toggle'),
         container: document.getElementById('keystone-container'),
+        header: document.getElementById('keystone-header'),
         messages: document.getElementById('keystone-messages'),
         input: document.getElementById('keystone-input'),
         send: document.getElementById('keystone-send'),
@@ -605,7 +853,17 @@
     bindEvents() {
       this.elements.toggle.addEventListener('click', () => this.toggleChat());
       this.elements.send.addEventListener('click', () => this.sendMessage());
-      this.elements.clear.addEventListener('click', () => this.showResetConfirmation());
+      this.elements.clear.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent header click from firing
+        this.showResetConfirmation();
+      });
+      
+      // Click on header to minimize chat
+      this.elements.header.addEventListener('click', (e) => {
+        // Don't minimize if clicking on action buttons
+        if (e.target.closest('.keystone-chat-header-actions')) return;
+        this.toggleChat();
+      });
       
       this.elements.confirmCancel.addEventListener('click', () => {
         this.elements.confirmOverlay.classList.remove('active');
@@ -962,11 +1220,17 @@
       submitBtn.addEventListener('click', () => {
         const selected = [];
         this.elements.structuredInput.querySelectorAll('input:checked').forEach(input => {
-          selected.push(input.dataset.name);
+          selected.push({
+            id: input.value,
+            name: input.dataset.name
+          });
         });
         
         if (selected.length > 0) {
-          const message = `I'd like to book: ${selected.join(', ')}`;
+          // Send service ID in a parseable format for the backend
+          const serviceIds = selected.map(s => s.id).join(', ');
+          const serviceNames = selected.map(s => s.name).join(', ');
+          const message = `I'd like to book: ${serviceNames} [service_id:${serviceIds}]`;
           this.sendMessage(message);
         }
       });

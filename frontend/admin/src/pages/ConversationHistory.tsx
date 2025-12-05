@@ -122,8 +122,8 @@ export default function ConversationHistory() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-card-foreground">Conversation History</h1>
-          <p className="text-muted-foreground mt-1">View and search chat transcripts</p>
+          <h1 className="text-2xl font-semibold text-card-foreground">Conversations</h1>
+          <p className="text-muted-foreground mt-1">{business?.name ? `${business.name}'s` : 'Your'} chat transcripts</p>
         </div>
         <div className="flex gap-2">
           <button

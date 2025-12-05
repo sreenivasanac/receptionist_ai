@@ -173,9 +173,16 @@ class CustomerToolkit(Toolkit):
         
         self.collecting_field = result["missing_fields"][0] if result["missing_fields"] else None
         
+        # Map internal field names to display names for the UI
+        # Note: The frontend contact form only supports "name", "phone", "email" fields
+        # Both first_name and last_name map to "name" field in the UI
+        field_mapping = {"first_name": "name", "last_name": "name", "email": "email", "phone": "phone"}
+        # Deduplicate fields (e.g., if both first_name and last_name requested, only show one "name" field)
+        display_fields = list(dict.fromkeys([field_mapping.get(f, f) for f in result.get("missing_fields", ["name", "phone"])]))
+        
         # Set up structured contact form input
         self.pending_input_type = "contact_form"
-        self.pending_input_config = {"fields": result.get("missing_fields", ["name", "phone"])}
+        self.pending_input_config = {"fields": display_fields}
         
         return result.get("prompt", "Could you please provide your contact information?")
     

@@ -51,7 +51,18 @@ export default function Workflows() {
   const [templates, setTemplates] = useState<WorkflowTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showCustomForm, setShowCustomForm] = useState(false)
   const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null)
+  const [customWorkflow, setCustomWorkflow] = useState({
+    name: '',
+    description: '',
+    trigger_type: 'keyword' as 'keyword' | 'segment',
+    keywords: '',
+    customer_type: 'any',
+    action_type: 'send_message',
+    action_message: '',
+    action_discount: 10,
+  })
 
   const fetchWorkflows = async () => {
     if (!business?.id) return
@@ -90,6 +101,43 @@ export default function Workflows() {
       await api.post(`/workflows/${business.id}/from-template?template_name=${encodeURIComponent(templateName)}`)
       fetchWorkflows()
       setShowCreateModal(false)
+    } catch (error) {
+      console.error('Failed to create workflow:', error)
+    }
+  }
+
+  const createCustomWorkflow = async () => {
+    if (!business?.id || !customWorkflow.name) return
+    
+    const triggerConfig: TriggerConfig = customWorkflow.trigger_type === 'keyword'
+      ? { keywords: customWorkflow.keywords.split(',').map(k => k.trim()).filter(k => k) }
+      : { customer_type: customWorkflow.customer_type }
+    
+    const actions: WorkflowAction[] = []
+    if (customWorkflow.action_type === 'send_message' && customWorkflow.action_message) {
+      actions.push({ type: 'send_message', config: { message: customWorkflow.action_message } })
+    } else if (customWorkflow.action_type === 'apply_discount') {
+      actions.push({ type: 'apply_discount', config: { percent: customWorkflow.action_discount, reason: customWorkflow.name } })
+    } else if (customWorkflow.action_type === 'capture_lead') {
+      actions.push({ type: 'capture_lead', config: { interest: customWorkflow.name } })
+    }
+    
+    try {
+      await api.post(`/workflows/${business.id}`, {
+        name: customWorkflow.name,
+        description: customWorkflow.description,
+        trigger_type: customWorkflow.trigger_type,
+        trigger_config: triggerConfig,
+        actions,
+        is_active: true
+      })
+      fetchWorkflows()
+      setShowCreateModal(false)
+      setShowCustomForm(false)
+      setCustomWorkflow({
+        name: '', description: '', trigger_type: 'keyword', keywords: '',
+        customer_type: 'any', action_type: 'send_message', action_message: '', action_discount: 10
+      })
     } catch (error) {
       console.error('Failed to create workflow:', error)
     }
@@ -139,8 +187,8 @@ export default function Workflows() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-card-foreground">Workflows</h1>
-          <p className="text-muted-foreground mt-1">Automate customer interactions with custom workflows</p>
+          <h1 className="text-2xl font-semibold text-card-foreground">Chat Workflows</h1>
+          <p className="text-muted-foreground mt-1">Automate {business?.name ? `${business.name}'s` : 'your'} AI receptionist responses</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -152,50 +200,47 @@ export default function Workflows() {
 
       {/* What You Can Do Section */}
       <div className="card mb-6 bg-gradient-to-r from-primary/5 to-blue-500/5 border-primary/20">
-        <h2 className="text-lg font-medium text-card-foreground mb-3">What You Can Automate</h2>
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h2 className="text-lg font-medium text-card-foreground">How Chat Workflows Work</h2>
+            <p className="text-sm text-muted-foreground mt-1">When customers chat with your AI receptionist, workflows automatically trigger special responses based on what they say. Click any example to add it.</p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div className="flex items-start gap-2">
-            <span className="text-primary mt-0.5">🎂</span>
-            <div>
-              <p className="font-medium text-card-foreground">Birthday Discounts</p>
-              <p className="text-muted-foreground">Auto-offer 20% off when customers mention their birthday</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-primary mt-0.5">💒</span>
-            <div>
-              <p className="font-medium text-card-foreground">Bridal Inquiries</p>
-              <p className="text-muted-foreground">Capture wedding leads and route to your bridal specialist</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-primary mt-0.5">🏢</span>
-            <div>
-              <p className="font-medium text-card-foreground">Corporate Packages</p>
-              <p className="text-muted-foreground">Automatically capture B2B leads for group bookings</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-primary mt-0.5">⭐</span>
-            <div>
-              <p className="font-medium text-card-foreground">VIP Recognition</p>
-              <p className="text-muted-foreground">Special messages for customers with 5+ visits</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-primary mt-0.5">🆕</span>
-            <div>
-              <p className="font-medium text-card-foreground">New Customer Welcome</p>
-              <p className="text-muted-foreground">Offer first-visit discounts to new customers</p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2">
-            <span className="text-primary mt-0.5">💳</span>
-            <div>
-              <p className="font-medium text-card-foreground">Membership Inquiries</p>
-              <p className="text-muted-foreground">Capture leads when customers ask about packages</p>
-            </div>
-          </div>
+          {[
+            { icon: '🎂', name: 'Birthday Discounts', desc: 'When customer says "birthday" → offer 20% discount', template: 'Birthday Discount' },
+            { icon: '💒', name: 'Bridal Inquiries', desc: 'When customer says "wedding" → capture lead for follow-up', template: 'Bridal Inquiry Capture' },
+            { icon: '🏢', name: 'Corporate Packages', desc: 'When customer says "corporate/team" → capture B2B lead', template: 'Corporate Inquiry Routing' },
+            { icon: '⭐', name: 'VIP Recognition', desc: 'When returning customer detected → send thank you message', template: 'Loyalty Reminder' },
+            { icon: '🆕', name: 'New Customer Welcome', desc: 'When new customer identified → offer first-visit discount', template: 'New Customer Welcome' },
+            { icon: '💳', name: 'Membership Inquiries', desc: 'When customer asks about "membership" → capture lead', template: 'Membership Inquiry' },
+          ].map((example) => {
+            const isAdded = workflows.some(w => w.name === example.template)
+            return (
+              <div
+                key={example.name}
+                onClick={() => !isAdded && createFromTemplate(example.template)}
+                className={`group relative flex items-start gap-2 p-3 -m-3 rounded-lg transition-all ${
+                  isAdded 
+                    ? 'opacity-60 cursor-default' 
+                    : 'cursor-pointer hover:bg-primary/10'
+                }`}
+              >
+                <span className="text-primary mt-0.5">{example.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-card-foreground">{example.name}</p>
+                    {isAdded ? (
+                      <span className="text-xs text-green-600 bg-green-500/10 px-1.5 py-0.5 rounded">Added</span>
+                    ) : (
+                      <span className="text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">+ Add</span>
+                    )}
+                  </div>
+                  <p className="text-muted-foreground">{example.desc}</p>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -355,9 +400,9 @@ export default function Workflows() {
           <div className="bg-card rounded-xl shadow-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
             <div className="p-6 border-b border-border">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-card-foreground">Add Workflow</h2>
+                <h2 className="text-xl font-semibold text-card-foreground">Add Chat Workflow</h2>
                 <button
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => { setShowCreateModal(false); setShowCustomForm(false) }}
                   className="text-muted-foreground hover:text-card-foreground"
                 >
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -365,31 +410,175 @@ export default function Workflows() {
                   </svg>
                 </button>
               </div>
-              <p className="text-muted-foreground mt-1">Choose a template to get started</p>
+              <p className="text-muted-foreground mt-1">Create rules for how your AI responds to customer chat messages</p>
             </div>
             
-            <div className="p-6 space-y-4">
-              {templates.map((template) => (
-                <div
-                  key={template.name}
-                  className="border border-border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer"
-                  onClick={() => createFromTemplate(template.name)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h3 className="font-medium text-card-foreground">{template.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>Trigger: {getTriggerLabel(template.trigger_type)}</span>
-                        <span>{template.actions.length} action(s)</span>
-                      </div>
+            <div className="p-6">
+              {!showCustomForm ? (
+                <>
+                  <button
+                    onClick={() => setShowCustomForm(true)}
+                    className="w-full mb-6 p-4 border-2 border-dashed border-primary/50 rounded-lg hover:border-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <div className="text-center">
+                      <span className="text-2xl">+</span>
+                      <p className="font-medium text-card-foreground mt-2">Create Custom Workflow</p>
+                      <p className="text-sm text-muted-foreground">Build your own trigger and response rules</p>
                     </div>
-                    <button className="btn btn-secondary text-sm">
-                      Use Template
+                  </button>
+                  
+                  <p className="text-sm font-medium text-muted-foreground mb-3">Or start from a template:</p>
+                  <div className="space-y-3">
+                    {templates.map((template) => (
+                      <div
+                        key={template.name}
+                        className="border border-border rounded-lg p-4 hover:border-primary transition-colors cursor-pointer"
+                        onClick={() => createFromTemplate(template.name)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-medium text-card-foreground">{template.name}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                              <span>Trigger: {getTriggerLabel(template.trigger_type)}</span>
+                              <span>{template.actions.length} action(s)</span>
+                            </div>
+                          </div>
+                          <button className="btn btn-secondary text-sm">
+                            Use
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setShowCustomForm(false)}
+                    className="text-sm text-muted-foreground hover:text-card-foreground flex items-center gap-1"
+                  >
+                    ← Back to templates
+                  </button>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-1">Workflow Name</label>
+                    <input
+                      type="text"
+                      value={customWorkflow.name}
+                      onChange={(e) => setCustomWorkflow({ ...customWorkflow, name: e.target.value })}
+                      placeholder="e.g., Summer Special Offer"
+                      className="input w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-1">Description (optional)</label>
+                    <input
+                      type="text"
+                      value={customWorkflow.description}
+                      onChange={(e) => setCustomWorkflow({ ...customWorkflow, description: e.target.value })}
+                      placeholder="When and why this triggers"
+                      className="input w-full"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">When to Trigger</label>
+                    <select
+                      value={customWorkflow.trigger_type}
+                      onChange={(e) => setCustomWorkflow({ ...customWorkflow, trigger_type: e.target.value as 'keyword' | 'segment' })}
+                      className="input w-full"
+                    >
+                      <option value="keyword">When customer says specific keywords</option>
+                      <option value="segment">Based on customer type</option>
+                    </select>
+                  </div>
+                  
+                  {customWorkflow.trigger_type === 'keyword' ? (
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-1">Keywords (comma-separated)</label>
+                      <input
+                        type="text"
+                        value={customWorkflow.keywords}
+                        onChange={(e) => setCustomWorkflow({ ...customWorkflow, keywords: e.target.value })}
+                        placeholder="e.g., summer, discount, special offer"
+                        className="input w-full"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Triggers when customer message contains any of these words</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-1">Customer Type</label>
+                      <select
+                        value={customWorkflow.customer_type}
+                        onChange={(e) => setCustomWorkflow({ ...customWorkflow, customer_type: e.target.value })}
+                        className="input w-full"
+                      >
+                        <option value="new">New Customers</option>
+                        <option value="returning">Returning Customers</option>
+                        <option value="vip">VIP Customers (5+ visits)</option>
+                      </select>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-card-foreground mb-2">Action to Take</label>
+                    <select
+                      value={customWorkflow.action_type}
+                      onChange={(e) => setCustomWorkflow({ ...customWorkflow, action_type: e.target.value })}
+                      className="input w-full"
+                    >
+                      <option value="send_message">Send a custom message</option>
+                      <option value="apply_discount">Offer a discount</option>
+                      <option value="capture_lead">Capture as a lead</option>
+                    </select>
+                  </div>
+                  
+                  {customWorkflow.action_type === 'send_message' && (
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-1">Message to Send</label>
+                      <textarea
+                        value={customWorkflow.action_message}
+                        onChange={(e) => setCustomWorkflow({ ...customWorkflow, action_message: e.target.value })}
+                        placeholder="e.g., Great news! We have a special summer offer just for you..."
+                        className="input w-full h-20"
+                      />
+                    </div>
+                  )}
+                  
+                  {customWorkflow.action_type === 'apply_discount' && (
+                    <div>
+                      <label className="block text-sm font-medium text-card-foreground mb-1">Discount Percentage</label>
+                      <input
+                        type="number"
+                        value={customWorkflow.action_discount}
+                        onChange={(e) => setCustomWorkflow({ ...customWorkflow, action_discount: Number(e.target.value) })}
+                        min="1"
+                        max="100"
+                        className="input w-24"
+                      />
+                      <span className="ml-2 text-muted-foreground">%</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      onClick={createCustomWorkflow}
+                      disabled={!customWorkflow.name || (customWorkflow.trigger_type === 'keyword' && !customWorkflow.keywords)}
+                      className="btn btn-primary disabled:opacity-50"
+                    >
+                      Create Workflow
+                    </button>
+                    <button
+                      onClick={() => setShowCustomForm(false)}
+                      className="btn btn-secondary"
+                    >
+                      Cancel
                     </button>
                   </div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>

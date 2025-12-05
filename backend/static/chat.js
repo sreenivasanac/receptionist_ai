@@ -173,6 +173,17 @@
   align-items: center;
   gap: 16px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  user-select: none;
+}
+
+.keystone-chat-header:hover {
+  background: linear-gradient(135deg, #5558e8, #4338ca);
+}
+
+.keystone-chat-header:active {
+  background: linear-gradient(135deg, #4f46e5, #3730a3);
 }
 
 .keystone-chat-header-avatar {
@@ -236,16 +247,67 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  position: relative;
+}
+
+.keystone-chat-clear::after {
+  content: 'Reset conversation';
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1e293b;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  z-index: 100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.keystone-chat-clear:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .keystone-chat-clear:hover {
   background: rgba(255, 255, 255, 0.25);
-  transform: rotate(90deg);
 }
 
 .keystone-chat-clear svg {
   width: 18px;
   height: 18px;
+  fill: white;
+  transition: transform 0.2s ease;
+}
+
+.keystone-chat-clear:hover svg {
+  transform: rotate(90deg);
+}
+
+.keystone-chat-minimize {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.keystone-chat-header:hover .keystone-chat-minimize {
+  opacity: 1;
+}
+
+.keystone-chat-minimize svg {
+  width: 20px;
+  height: 20px;
   fill: white;
 }
 
@@ -710,7 +772,7 @@
         </button>
         
         <div class="keystone-chat-container" id="keystone-container">
-          <div class="keystone-chat-header">
+          <div class="keystone-chat-header" id="keystone-header" title="Click to minimize">
             <div class="keystone-chat-header-avatar">
               <svg viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
@@ -721,11 +783,16 @@
               <span class="keystone-chat-header-status">Online</span>
             </div>
             <div class="keystone-chat-header-actions">
-              <button class="keystone-chat-clear" id="keystone-clear" title="Start new conversation">
+              <button class="keystone-chat-clear" id="keystone-clear">
                 <svg viewBox="0 0 24 24">
                   <path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
                 </svg>
               </button>
+              <div class="keystone-chat-minimize" title="Click to minimize">
+                <svg viewBox="0 0 24 24">
+                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                </svg>
+              </div>
             </div>
           </div>
           
@@ -770,6 +837,7 @@
         widget,
         toggle: document.getElementById('keystone-toggle'),
         container: document.getElementById('keystone-container'),
+        header: document.getElementById('keystone-header'),
         messages: document.getElementById('keystone-messages'),
         input: document.getElementById('keystone-input'),
         send: document.getElementById('keystone-send'),
@@ -785,7 +853,17 @@
     bindEvents() {
       this.elements.toggle.addEventListener('click', () => this.toggleChat());
       this.elements.send.addEventListener('click', () => this.sendMessage());
-      this.elements.clear.addEventListener('click', () => this.showResetConfirmation());
+      this.elements.clear.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent header click from firing
+        this.showResetConfirmation();
+      });
+      
+      // Click on header to minimize chat
+      this.elements.header.addEventListener('click', (e) => {
+        // Don't minimize if clicking on action buttons
+        if (e.target.closest('.keystone-chat-header-actions')) return;
+        this.toggleChat();
+      });
       
       this.elements.confirmCancel.addEventListener('click', () => {
         this.elements.confirmOverlay.classList.remove('active');

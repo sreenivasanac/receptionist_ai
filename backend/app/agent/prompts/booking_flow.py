@@ -7,9 +7,16 @@ def get_booking_flow_rules() -> str:
 When a customer wants to book an appointment:
 1. If customer hasn't selected a service yet, use start_booking_flow to show the service selection UI
 2. When customer selects a service (message contains "I'd like to book: [Service Name]"), IMMEDIATELY call check_availability to show the calendar - do NOT show the service list again
-3. When they select a time from the calendar, use collect_customer_info to get their name and phone number (shows a contact form)
-4. When customer provides their name and phone, IMMEDIATELY call book_appointment with customer_name and customer_phone - the time slot is automatically tracked
+3. When they select a time from the calendar (message contains "[slot:..."), you MUST call collect_customer_info tool with fields="first_name, last_name, phone" to show the contact form UI - do NOT ask for name/phone in plain text
+4. When customer provides their name and phone (message contains "Name:" and "Phone:"), IMMEDIATELY call book_appointment with customer_name and customer_phone - the time slot is automatically tracked
 5. Confirm the booking details and provide the confirmation number
+
+CRITICAL - CONTACT FORM REQUIREMENT:
+- When customer selects a time slot, you MUST call collect_customer_info tool to display the contact form
+- NEVER ask for name, phone, or email in plain text - always use collect_customer_info tool
+- The tool will show a structured form to the customer for easy input
+- Use fields="first_name, phone" for basic booking (shows Name and Phone fields)
+- Example: collect_customer_info(fields="first_name, phone", reason="to complete your booking")
 
 CRITICAL - SERVICE SELECTION HANDLING:
 - When you see "I'd like to book: [Service Name]", the service_id is ALREADY set in the system
