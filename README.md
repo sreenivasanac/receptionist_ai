@@ -2,6 +2,11 @@
 
 AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitness studios, clinics).
 
+## Live Demo
+
+- **Admin Dashboard**: [receptionist-ai.pragnyalabs.com/login](https://receptionist-ai.pragnyalabs.com/login) (Test username: `salon_sheela`)
+- **Embedded Chat Widget**: See it in action on a sample salon website at [sheela-salon.pragnyalabs.com](https://sheela-salon.pragnyalabs.com/) (bottom right corner)
+
 ## Screenshots
 
 <p align="center">
