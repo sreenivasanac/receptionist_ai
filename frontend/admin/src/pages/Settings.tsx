@@ -18,7 +18,7 @@ export default function Settings() {
   const loadSettings = async () => {
     try {
       const [embedData, featuresData] = await Promise.all([
-        api.get<{ embed_code: string }>(`/business/${business!.id}/embed-code?base_url=http://localhost:8000/static`),
+        api.get<{ embed_code: string }>(`/business/${business!.id}/embed-code?base_url=https://receptionist-ai.pragnyalabs.com/static&api_url=https://receptionist-ai.pragnyalabs.com/api`),
         api.get<{ features: Record<string, boolean> }>(`/business/${business!.id}/features`)
       ])
       setEmbedCode(embedData.embed_code)

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001'
+
+const API_URL = 'https://receptionist-ai.pragnyalabs.com/api'
 
 export default function ChatDemo() {
   const { business } = useAuth()
@@ -70,7 +71,7 @@ export default function ChatDemo() {
         <h2 className="text-lg font-semibold mb-4">Test Your Chatbot</h2>
         <p className="text-sm text-muted-foreground mb-6">
           Look for the chat bubble in the bottom-right corner of your screen to test your AI receptionist. 
-          Make sure your backend server is running on port 8001.
+          The chat widget connects to the production API.
         </p>
         
         <div className="bg-secondary/30 rounded-xl p-8 min-h-[400px] relative">
@@ -165,12 +166,8 @@ export default function ChatDemo() {
         {backendStatus === 'offline' && (
           <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-800">
-              <strong>Backend is not running.</strong> Start the server with:
+              <strong>Backend is not reachable.</strong> The production API at receptionist-ai.pragnyalabs.com is currently unavailable.
             </p>
-            <code className="block mt-2 bg-red-100 px-3 py-2 rounded text-red-900 font-mono text-sm">
-              cd backend && uv run python -m app.main
-            </code>
-            <p className="text-xs text-red-600 mt-2">Server should be running on port 8001</p>
           </div>
         )}
         

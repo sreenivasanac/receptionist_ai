@@ -115,13 +115,17 @@ async def update_features(business_id: str, features: dict = Body(...)):
 
 
 @router.get("/{business_id}/embed-code", response_model=dict)
-async def get_embed_code(business_id: str, base_url: Optional[str] = Query(default="https://widget.localkeystone.com")):
+async def get_embed_code(
+    business_id: str,
+    base_url: Optional[str] = Query(default="https://receptionist-ai.pragnyalabs.com/static"),
+    api_url: Optional[str] = Query(default="https://receptionist-ai.pragnyalabs.com/api")
+):
     """Get the embed code for the chat widget."""
     business = business_repo.find_by_id(business_id)
     if not business:
         raise HTTPException(status_code=404, detail="Business not found")
     
-    embed_code = f'''<script src="{base_url}/chat.js" data-business-id="{business_id}"></script>'''
+    embed_code = f'''<script src="{base_url}/chat.js" data-business-id="{business_id}" data-api-url="{api_url}"></script>'''
     
     return {
         "business_id": business_id,
