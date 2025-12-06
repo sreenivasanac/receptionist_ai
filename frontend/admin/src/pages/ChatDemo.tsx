@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 
+
 const API_URL = 'https://receptionist-ai.pragnyalabs.com/api'
 
 export default function ChatDemo() {

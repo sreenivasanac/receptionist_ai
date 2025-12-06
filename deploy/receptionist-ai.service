@@ -1,0 +1,16 @@
+[Unit]
+Description=Receptionist AI Backend API
+After=network.target
+
+[Service]
+Type=simple
+User=sreenivasanac
+Group=sreenivasanac
+WorkingDirectory=/home/sreenivasanac/projects/receptionist_ai/backend
+Environment="PATH=/home/sreenivasanac/projects/receptionist_ai/backend/.venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/sreenivasanac/projects/receptionist_ai/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8001
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
