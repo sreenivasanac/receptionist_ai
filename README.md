@@ -186,6 +186,14 @@ receptionist_ai/
 - `PUT /insights/{id}/unanswered/{qid}/resolve` - Resolve question and optionally add to FAQs
 - `DELETE /insights/{id}/unanswered/{qid}` - Delete unanswered question
 
+## Deployment
+
+See [deploy/DEPLOYMENT.md](deploy/DEPLOYMENT.md) for complete deployment instructions covering:
+- Backend setup with systemd
+- Frontend build and nginx configuration
+- SSL/HTTPS setup with Let's Encrypt
+- Common operations and troubleshooting
+
 ## Documentation
 
 - [PRD & Technical Spec](agentic_development_docs/project_design_plan/2_initial_plan.md)
