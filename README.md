@@ -10,11 +10,15 @@ AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitne
 ## Screenshots
 
 <p align="center">
-  <img src="frontend/product_images/01-dashboard.png" alt="Dashboard" width="800"/>
+  <img src="frontend/product_images/00-landing-page.png" alt="Landing Page" width="48%"/>
+  &nbsp;
+  <img src="frontend/product_images/01-dashboard.png" alt="Dashboard" width="48%"/>
 </p>
 
 <p align="center">
-  <img src="frontend/product_images/12-chat-demo.png" alt="Chat Demo" width="800"/>
+  <img src="frontend/product_images/02-analytics.png" alt="Analytics" width="48%"/>
+  &nbsp;
+  <img src="frontend/product_images/12-chat-demo.png" alt="Chat Demo" width="48%"/>
 </p>
 
 [View all screenshots](SCREENSHOTS.md)
