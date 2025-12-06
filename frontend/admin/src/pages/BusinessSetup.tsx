@@ -58,6 +58,25 @@ export default function BusinessSetup() {
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null)
   const [newService, setNewService] = useState<{ id: string; name: string; duration_minutes: number; price: number; description: string } | null>(null)
   
+  // Website Import state
+  const [websiteUrls, setWebsiteUrls] = useState<string[]>([''])
+  const [scraping, setScraping] = useState(false)
+  const [scrapeResults, setScrapeResults] = useState<{
+    results: Array<{ url: string; success: boolean; error?: string; title?: string }>
+    current_config: Record<string, unknown>
+    extracted_config: Record<string, unknown>
+    field_diffs: Array<{ field: string; field_label: string; current_value?: string; extracted_value?: string }>
+    new_services: Array<{ name: string; description?: string; duration_minutes?: number; price?: number; is_new: boolean }>
+    new_faqs: Array<{ question: string; answer: string; is_new: boolean }>
+    extracted_hours: Array<{ day: string; open?: string; close?: string; closed: boolean }>
+    extraction_error?: string
+  } | null>(null)
+  const [selectedFields, setSelectedFields] = useState<Record<string, 'current' | 'extracted'>>({})
+  const [selectedServices, setSelectedServices] = useState<Set<number>>(new Set())
+  const [selectedFaqs, setSelectedFaqs] = useState<Set<number>>(new Set())
+  const [applyHours, setApplyHours] = useState(false)
+  const [applying, setApplying] = useState(false)
+  
   useEffect(() => {
     if (business?.id) {
       loadConfig()
@@ -185,6 +204,163 @@ export default function BusinessSetup() {
     }
   }
   
+  // Website Import functions
+  const addUrlField = () => {
+    if (websiteUrls.length < 10) {
+      setWebsiteUrls([...websiteUrls, ''])
+    }
+  }
+  
+  const removeUrlField = (index: number) => {
+    setWebsiteUrls(websiteUrls.filter((_, i) => i !== index))
+  }
+  
+  const updateUrl = (index: number, value: string) => {
+    const newUrls = [...websiteUrls]
+    newUrls[index] = value
+    setWebsiteUrls(newUrls)
+  }
+  
+  const handleScrapeWebsites = async () => {
+    if (!business?.id) return
+    
+    const validUrls = websiteUrls.filter(url => url.trim())
+    if (validUrls.length === 0) {
+      setMessage('Please enter at least one URL')
+      return
+    }
+    
+    setScraping(true)
+    setScrapeResults(null)
+    setSelectedFields({})
+    setSelectedServices(new Set())
+    setSelectedFaqs(new Set())
+    setApplyHours(false)
+    setMessage('')
+    
+    try {
+      const response = await api.post<typeof scrapeResults>(`/business/${business.id}/scrape`, {
+        urls: validUrls
+      })
+      setScrapeResults(response)
+      
+      // Auto-select extracted values for fields that are empty in current config
+      const autoSelected: Record<string, 'current' | 'extracted'> = {}
+      response?.field_diffs?.forEach(diff => {
+        if (!diff.current_value && diff.extracted_value) {
+          autoSelected[diff.field] = 'extracted'
+        } else {
+          autoSelected[diff.field] = 'current'
+        }
+      })
+      setSelectedFields(autoSelected)
+      
+      // Auto-select new services and FAQs
+      const newSvcIndices = new Set<number>()
+      response?.new_services?.forEach((svc, idx) => {
+        if (svc.is_new) newSvcIndices.add(idx)
+      })
+      setSelectedServices(newSvcIndices)
+      
+      const newFaqIndices = new Set<number>()
+      response?.new_faqs?.forEach((faq, idx) => {
+        if (faq.is_new) newFaqIndices.add(idx)
+      })
+      setSelectedFaqs(newFaqIndices)
+      
+      if (response?.extraction_error) {
+        setMessage(`Warning: ${response.extraction_error}`)
+      } else {
+        setMessage('Website information extracted successfully! Review and apply below.')
+      }
+    } catch (error: unknown) {
+      const err = error as { message?: string }
+      setMessage(`Error: ${err.message || 'Failed to scrape websites'}`)
+    } finally {
+      setScraping(false)
+    }
+  }
+  
+  const handleApplyExtracted = async () => {
+    if (!business?.id || !scrapeResults) return
+    
+    setApplying(true)
+    setMessage('')
+    
+    try {
+      // Build extracted values map
+      const extractedValues: Record<string, string> = {}
+      scrapeResults.field_diffs.forEach(diff => {
+        if (diff.extracted_value) {
+          extractedValues[diff.field] = diff.extracted_value
+        }
+      })
+      
+      // Build services and FAQs to add
+      const servicesToAdd = scrapeResults.new_services
+        .filter((_, idx) => selectedServices.has(idx))
+        .map(svc => ({
+          name: svc.name,
+          description: svc.description,
+          duration_minutes: svc.duration_minutes,
+          price: svc.price
+        }))
+      
+      const faqsToAdd = scrapeResults.new_faqs
+        .filter((_, idx) => selectedFaqs.has(idx))
+        .map(faq => ({
+          question: faq.question,
+          answer: faq.answer
+        }))
+      
+      // Build hours object
+      const hoursObj: Record<string, { open?: string; close?: string; closed: boolean }> = {}
+      scrapeResults.extracted_hours.forEach(h => {
+        hoursObj[h.day] = { open: h.open, close: h.close, closed: h.closed }
+      })
+      
+      await api.post(`/business/${business.id}/scrape/apply`, {
+        selected_fields: selectedFields,
+        extracted_values: extractedValues,
+        add_services: servicesToAdd,
+        add_faqs: faqsToAdd,
+        apply_hours: applyHours,
+        extracted_hours: hoursObj
+      })
+      
+      setMessage('Changes applied successfully!')
+      setScrapeResults(null)
+      loadConfig() // Reload config to reflect changes
+    } catch (error: unknown) {
+      const err = error as { message?: string }
+      setMessage(`Error: ${err.message || 'Failed to apply changes'}`)
+    } finally {
+      setApplying(false)
+    }
+  }
+  
+  const toggleFieldSelection = (field: string, value: 'current' | 'extracted') => {
+    setSelectedFields(prev => ({ ...prev, [field]: value }))
+  }
+  
+  const toggleServiceSelection = (idx: number) => {
+    setSelectedServices(prev => {
+      const next = new Set(prev)
+      if (next.has(idx)) next.delete(idx)
+      else next.add(idx)
+      return next
+    })
+  }
+  
+  const toggleFaqSelection = (idx: number) => {
+    setSelectedFaqs(prev => {
+      const next = new Set(prev)
+      if (next.has(idx)) next.delete(idx)
+      else next.add(idx)
+      return next
+    })
+  }
+  
   if (loading) {
     return (
       <div className="p-8 flex items-center justify-center">
@@ -273,6 +449,276 @@ export default function BusinessSetup() {
               />
             </div>
           </div>
+        </div>
+        
+        {/* Website Import */}
+        <div className="card">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-semibold text-card-foreground">Import from Website</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Extract business information from your website pages
+              </p>
+            </div>
+          </div>
+          
+          <div className="space-y-3 mb-4">
+            {websiteUrls.map((url, index) => (
+              <div key={index} className="flex gap-2">
+                <input
+                  type="url"
+                  value={url}
+                  onChange={(e) => updateUrl(index, e.target.value)}
+                  className="input-field flex-1"
+                  placeholder="https://yourbusiness.com/about"
+                />
+                {websiteUrls.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeUrlField(index)}
+                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex gap-2 mb-4">
+            {websiteUrls.length < 10 && (
+              <button
+                type="button"
+                onClick={addUrlField}
+                className="text-sm text-primary hover:underline flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add another URL
+              </button>
+            )}
+          </div>
+          
+          <button
+            type="button"
+            onClick={handleScrapeWebsites}
+            disabled={scraping || websiteUrls.every(u => !u.trim())}
+            className="btn-primary disabled:opacity-50"
+          >
+            {scraping ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Fetching...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Fetch Information
+              </>
+            )}
+          </button>
+          
+          {/* Scrape Results - Diff View */}
+          {scrapeResults && (
+            <div className="mt-4 pt-4 border-t border-border space-y-4">
+              {/* URL Results */}
+              <div>
+                <h3 className="text-sm font-medium text-card-foreground mb-2">Scraped Pages</h3>
+                <div className="space-y-1">
+                  {scrapeResults.results.map((result, idx) => (
+                    <div key={idx} className={`text-sm p-2 rounded ${result.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      {result.success ? '✓' : '✗'} {result.url}
+                      {result.title && <span className="ml-2 text-muted-foreground">- {result.title}</span>}
+                      {result.error && <span className="ml-2">- {result.error}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Field Diffs */}
+              {scrapeResults.field_diffs.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-card-foreground mb-2">Business Information</h3>
+                  <p className="text-xs text-muted-foreground mb-3">Select which value to use for each field:</p>
+                  <div className="bg-secondary/30 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left p-3 font-medium">Field</th>
+                          <th className="text-left p-3 font-medium">Current Value</th>
+                          <th className="text-left p-3 font-medium">Extracted Value</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {scrapeResults.field_diffs.map((diff) => (
+                          <tr key={diff.field} className="border-b border-border last:border-0">
+                            <td className="p-3 font-medium">{diff.field_label}</td>
+                            <td className="p-3">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`field-${diff.field}`}
+                                  checked={selectedFields[diff.field] === 'current'}
+                                  onChange={() => toggleFieldSelection(diff.field, 'current')}
+                                  className="w-4 h-4 text-primary"
+                                  disabled={!diff.current_value}
+                                />
+                                <span className={!diff.current_value ? 'text-muted-foreground italic' : ''}>
+                                  {diff.current_value || '(empty)'}
+                                </span>
+                              </label>
+                            </td>
+                            <td className="p-3">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="radio"
+                                  name={`field-${diff.field}`}
+                                  checked={selectedFields[diff.field] === 'extracted'}
+                                  onChange={() => toggleFieldSelection(diff.field, 'extracted')}
+                                  className="w-4 h-4 text-primary"
+                                  disabled={!diff.extracted_value}
+                                />
+                                <span className={`${!diff.extracted_value ? 'text-muted-foreground italic' : 'text-green-700'}`}>
+                                  {diff.extracted_value || '(not found)'}
+                                </span>
+                              </label>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              
+              {/* Extracted Hours */}
+              {scrapeResults.extracted_hours.length > 0 && (
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer mb-2">
+                    <input
+                      type="checkbox"
+                      checked={applyHours}
+                      onChange={(e) => setApplyHours(e.target.checked)}
+                      className="w-4 h-4 rounded border-border text-primary"
+                    />
+                    <span className="text-sm font-medium text-card-foreground">Apply Extracted Business Hours</span>
+                  </label>
+                  {applyHours && (
+                    <div className="bg-secondary/30 rounded-lg p-3 space-y-1">
+                      {scrapeResults.extracted_hours.map((h) => (
+                        <div key={h.day} className="text-sm flex gap-2">
+                          <span className="capitalize font-medium w-24">{h.day}:</span>
+                          <span className={h.closed ? 'text-red-600' : 'text-green-700'}>
+                            {h.closed ? 'Closed' : `${h.open || '?'} - ${h.close || '?'}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* New Services */}
+              {scrapeResults.new_services.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-card-foreground mb-2">
+                    Services Found ({scrapeResults.new_services.filter(s => s.is_new).length} new)
+                  </h3>
+                  <div className="space-y-2">
+                    {scrapeResults.new_services.map((svc, idx) => (
+                      <label
+                        key={idx}
+                        className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                          selectedServices.has(idx) ? 'bg-green-50 border border-green-200' : 'bg-secondary/30'
+                        } ${!svc.is_new ? 'opacity-50' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedServices.has(idx)}
+                          onChange={() => toggleServiceSelection(idx)}
+                          className="w-4 h-4 mt-0.5 rounded border-border text-primary"
+                          disabled={!svc.is_new}
+                        />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start">
+                            <span className="font-medium">{svc.name}</span>
+                            <span className="text-primary font-semibold">
+                              {svc.price != null ? `$${svc.price}` : ''}
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {svc.duration_minutes && `${svc.duration_minutes} min`}
+                            {svc.description && ` • ${svc.description}`}
+                          </p>
+                          {!svc.is_new && (
+                            <span className="text-xs text-amber-600">Already exists</span>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* New FAQs */}
+              {scrapeResults.new_faqs.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium text-card-foreground mb-2">
+                    FAQs Found ({scrapeResults.new_faqs.filter(f => f.is_new).length} new)
+                  </h3>
+                  <div className="space-y-2">
+                    {scrapeResults.new_faqs.map((faq, idx) => (
+                      <label
+                        key={idx}
+                        className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+                          selectedFaqs.has(idx) ? 'bg-green-50 border border-green-200' : 'bg-secondary/30'
+                        } ${!faq.is_new ? 'opacity-50' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedFaqs.has(idx)}
+                          onChange={() => toggleFaqSelection(idx)}
+                          className="w-4 h-4 mt-0.5 rounded border-border text-primary"
+                          disabled={!faq.is_new}
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium">{faq.question}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{faq.answer}</p>
+                          {!faq.is_new && (
+                            <span className="text-xs text-amber-600">Already exists</span>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Apply Button */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleApplyExtracted}
+                  disabled={applying}
+                  className="btn-primary disabled:opacity-50"
+                >
+                  {applying ? 'Applying...' : 'Apply Selected Changes'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScrapeResults(null)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Business Hours */}

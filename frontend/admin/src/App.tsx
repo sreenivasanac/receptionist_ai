@@ -17,6 +17,9 @@ import Marketing from './pages/Marketing'
 import ConversationHistory from './pages/ConversationHistory'
 import Analytics from './pages/Analytics'
 import Workflows from './pages/Workflows'
+// V4 Pages
+import FAQManagement from './pages/FAQManagement'
+import UnansweredQuestions from './pages/UnansweredQuestions'
 import { AuthProvider, useAuth } from './hooks/useAuth'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -64,6 +67,9 @@ function AppRoutes() {
         <Route path="conversations" element={<ConversationHistory />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="workflows" element={<Workflows />} />
+        {/* V4 Routes */}
+        <Route path="faqs" element={<FAQManagement />} />
+        <Route path="insights" element={<UnansweredQuestions />} />
       </Route>
     </Routes>
   )

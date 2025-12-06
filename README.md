@@ -38,13 +38,19 @@ AI-powered receptionist chatbot for self-care businesses (salons, medspas, fitne
 - **FAQ Management** - CRUD operations for business FAQs
 - **CSV Import** - Bulk import customers from CSV files
 
-### V3 - Intelligence & Polish (Current)
+### V3 - Intelligence & Polish
 - **Analytics Dashboard** - Leads, appointments, conversations, conversion rates with navigation
 - **Conversation History** - View, search, and export chat transcripts (JSON/CSV)
 - **Custom Workflows** - Automate responses with keyword triggers, customer segments. Pre-built automations (birthday, bridal, corporate, VIP, new customer)
 - **Service Recommendations** - AI suggests services based on customer goals/concerns
 - **Cancellation Recovery** - Automatic waitlist notifications when slots open up
 - **Search & Filters** - Search appointments by customer name, filter by status/date
+
+### V4 - Business Intelligence (Current)
+- **Unanswered Questions Report** - Track questions AI couldn't answer, resolve and add to FAQs with one click
+- **FAQ Management Page** - Dedicated interface to view, add, edit, and delete FAQs
+- **Website Import** - Extract business info from your website URLs with one-click apply
+- **Dashboard Alerts** - Real-time alerts for new leads and unanswered questions needing attention
 
 ## Tech Stack
 
@@ -171,6 +177,14 @@ receptionist_ai/
 - `POST /workflows/{id}` - Create workflow
 - `GET /workflows/{id}/templates` - Get pre-built templates
 - `POST /workflows/{id}/{workflow_id}/toggle` - Enable/disable workflow
+
+### V4 - Website Import & Insights
+- `POST /business/{id}/scrape` - Scrape multiple URLs and extract business info
+- `POST /business/{id}/scrape/apply` - Apply scraped data to business config
+- `GET /insights/{id}/unanswered` - List unanswered questions
+- `POST /insights/{id}/unanswered` - Log new unanswered question
+- `PUT /insights/{id}/unanswered/{qid}/resolve` - Resolve question and optionally add to FAQs
+- `DELETE /insights/{id}/unanswered/{qid}` - Delete unanswered question
 
 ## Documentation
 

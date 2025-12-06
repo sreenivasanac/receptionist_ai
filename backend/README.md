@@ -34,7 +34,9 @@ app/
 │   ├── faqs.py          # V2: FAQ management
 │   ├── analytics.py     # V3: Dashboard metrics & stats
 │   ├── workflows.py     # V3: Custom workflow management
-│   └── conversations.py # V3: Conversation history & export
+│   ├── conversations.py # V3: Conversation history & export
+│   ├── scraper.py       # V4: Website scraping & import
+│   └── insights.py      # V4: Unanswered questions & insights
 ├── agent/
 │   ├── receptionist.py  # Agno agent with modular toolkits
 │   ├── prompts/         # Modular system prompts (base, booking, services, etc.)
@@ -133,6 +135,17 @@ app/
 - `POST /workflows/{business_id}/{id}/toggle` - Enable/disable workflow
 - `PUT /workflows/{business_id}/{id}` - Update workflow
 - `DELETE /workflows/{business_id}/{id}` - Delete workflow
+
+### V4 - Website Import
+- `POST /business/{business_id}/scrape` - Scrape multiple URLs, extract business info
+- `POST /business/{business_id}/scrape/apply` - Apply scraped data to config
+
+### V4 - Insights (Unanswered Questions)
+- `GET /insights/{business_id}/unanswered` - List unanswered questions with categories
+- `POST /insights/{business_id}/unanswered` - Log a new unanswered question
+- `PUT /insights/{business_id}/unanswered/{id}/resolve` - Resolve question, optionally add to FAQs
+- `PUT /insights/{business_id}/unanswered/{id}/category` - Update question category
+- `DELETE /insights/{business_id}/unanswered/{id}` - Delete unanswered question
 
 ## Agent Tools (V2)
 
