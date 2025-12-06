@@ -122,9 +122,20 @@ export default function UnansweredQuestions() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-card-foreground">Unanswered Questions</h1>
+          <h1 className="text-2xl font-semibold text-card-foreground">Question Gaps</h1>
           <p className="text-muted-foreground mt-1">Questions your AI couldn't answer confidently</p>
         </div>
+        <a
+          href={`/preview?id=${business.id}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-primary flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+          </svg>
+          Test Your AI Receptionist
+        </a>
       </div>
 
       {/* Info Banner */}
@@ -132,7 +143,7 @@ export default function UnansweredQuestions() {
         <div className="flex gap-3">
           <div className="flex-shrink-0">
             <svg className="w-5 h-5 text-purple-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
@@ -140,7 +151,7 @@ export default function UnansweredQuestions() {
             <p className="text-sm text-purple-700 mt-1">
               These are questions customers asked that your AI couldn't answer. Review them to identify 
               gaps in your business information. Resolve questions by providing answers, which can be 
-              automatically added to your FAQs.
+              automatically added to your FAQs. <a href={`/preview?id=${business.id}`} target="_blank" rel="noopener noreferrer" className="underline font-medium">Test your chatbot</a> to see how it handles questions.
             </p>
           </div>
         </div>
