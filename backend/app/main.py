@@ -16,6 +16,9 @@ from app.api import (
 from app.api.analytics import router as analytics_router
 from app.api.workflows import router as workflows_router
 from app.api.conversations import router as conversations_router
+# V4 Routers
+from app.api.scraper import router as scraper_router
+from app.api.insights import router as insights_router
 
 
 @asynccontextmanager
@@ -57,6 +60,10 @@ app.include_router(faqs_router)
 app.include_router(analytics_router)
 app.include_router(workflows_router)
 app.include_router(conversations_router)
+
+# V4 Routers
+app.include_router(scraper_router)
+app.include_router(insights_router)
 
 # Serve static files (chat widget)
 static_path = Path(__file__).parent.parent / "static"

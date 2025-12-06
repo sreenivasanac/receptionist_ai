@@ -10,13 +10,20 @@ interface DashboardStats {
   total_customers: number
 }
 
+interface UnansweredCount {
+  total: number
+}
+
 export default function Dashboard() {
   const { user, business } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [newLeads, setNewLeads] = useState(0)
+  const [unansweredCount, setUnansweredCount] = useState(0)
   
   useEffect(() => {
     if (business?.id) {
       loadStats()
+      loadAlerts()
     }
   }, [business?.id])
   
@@ -27,6 +34,26 @@ export default function Dashboard() {
       setStats(data.summary)
     } catch (error) {
       console.error('Failed to load stats:', error)
+    }
+  }
+  
+  const loadAlerts = async () => {
+    if (!business?.id) return
+    try {
+      // Load new leads count
+      const leadsData = await api.get<Array<{ status: string }>>(`/admin/${business.id}/leads?status=new&limit=100`)
+      setNewLeads(Array.isArray(leadsData) ? leadsData.length : 0)
+      
+      // Load unanswered questions count
+      try {
+        const unansweredData = await api.get<UnansweredCount>(`/insights/${business.id}/unanswered?resolved=false&limit=1`)
+        setUnansweredCount(unansweredData.total || 0)
+      } catch {
+        // Insights endpoint may not exist yet
+        setUnansweredCount(0)
+      }
+    } catch (error) {
+      console.error('Failed to load alerts:', error)
     }
   }
   
@@ -64,6 +91,8 @@ export default function Dashboard() {
   const moreActions = [
     { title: 'Customers', description: 'View customer database', link: '/customers', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
     { title: 'Leads', description: 'Track sales inquiries', link: '/leads', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
+    { title: 'Insights', description: 'Unanswered questions', link: '/insights', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
+    { title: 'FAQs', description: 'Manage FAQ answers', link: '/faqs', icon: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
     { title: 'Workflows', description: 'Automate chat responses', link: '/workflows', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
     { title: 'SMS Marketing', description: 'Send campaigns', link: '/marketing', icon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' },
     { title: 'Conversations', description: 'View chat history', link: '/conversations', icon: 'M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z' },
@@ -89,6 +118,40 @@ export default function Dashboard() {
           {business ? `Managing ${business.name}` : 'Set up your business to get started'}
         </p>
       </div>
+      
+      {/* Alerts Section */}
+      {business && (newLeads > 0 || unansweredCount > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {newLeads > 0 && (
+            <Link to="/leads" className="flex items-center gap-4 p-4 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors">
+              <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">{newLeads}</span>
+              </div>
+              <div>
+                <p className="font-medium text-blue-900">New leads waiting</p>
+                <p className="text-sm text-blue-700">Review and follow up on new inquiries</p>
+              </div>
+              <svg className="w-5 h-5 text-blue-500 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          )}
+          {unansweredCount > 0 && (
+            <Link to="/insights" className="flex items-center gap-4 p-4 bg-purple-50 border border-purple-200 rounded-xl hover:bg-purple-100 transition-colors">
+              <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold">{unansweredCount}</span>
+              </div>
+              <div>
+                <p className="font-medium text-purple-900">Unanswered questions</p>
+                <p className="text-sm text-purple-700">Review questions your AI couldn't answer</p>
+              </div>
+              <svg className="w-5 h-5 text-purple-500 ml-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          )}
+        </div>
+      )}
       
       {business && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
